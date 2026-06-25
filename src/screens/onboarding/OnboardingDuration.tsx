@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
-// src/screens/OnboardingDuration.tsx — Screen 3: 기간 선택
-import React, { useState } from 'react';
+// src/screens/OnboardingDuration.tsx — Screen 3: 두디가 고른 호흡 (표시 전용)
+import React from 'react';
 import {
   View,
   Text,
@@ -18,41 +18,25 @@ import HeaderSection from '../../components/common/HeaderSection';
 import EggSvg from '../../assets/doody/egg.webp';
 import { COLORS } from '../../constants/theme';
 
+// goal_choice → recommended_period 결정론적 카탈로그
+const PERIOD_CATALOG: Record<string, { id: string; label: string; description: string }> = {
+  g1: { id: '1w',  label: '1주',   description: '작은 루틴을 만들기엔 1주가 딱 맞아요.\n부담 없이 한 걸음씩 시작해봐요.' },
+  g2: { id: '1m',  label: '1개월', description: '돈과 소비를 천천히 마주하려면\n1개월이 가장 안전한 호흡이에요.' },
+  g3: { id: '3m',  label: '3개월', description: '취업·상담 지원 탐색엔 3개월이 필요해요.\n단단히 준비할 수 있게 함께 걸어요.' },
+};
+
+const DEFAULT_PERIOD = { id: '1w', label: '1주', description: '지금 목표에 딱 맞는 호흡으로 시작해봐요.' };
+
 interface OnboardingDurationProps {
-  onNext: (duration: string) => void;
+  goalId: string;
+  onNext: () => void;
   onBack: () => void;
   onLater: () => void;
 }
 
-export default function OnboardingDuration({ onNext, onBack, onLater }: OnboardingDurationProps) {
+export default function OnboardingDuration({ goalId, onNext, onBack, onLater }: OnboardingDurationProps) {
   const insets = useSafeAreaInsets();
-  const [selectedDuration, setSelectedDuration] = useState<string>('1w');
-
-  const durations = [
-    { id: '1d', label: '오늘만' },
-    { id: '1w', label: '1주' },
-    { id: '1m', label: '1개월' },
-    { id: '3m', label: '3개월' },
-  ];
-
-  const getHelperText = () => {
-    switch (selectedDuration) {
-      case '1d':
-        return '하루 집중 플랜을 추천해요! 바로 가볍게 성공해봐요.';
-      case '1w':
-        return '1주 플랜을 추천해요! 작은 단계로 나눠볼게요.';
-      case '1m':
-        return '1개월 플랜을 추천해요! 서서히 습관을 만들어가요.';
-      case '3m':
-        return '3개월 장기 플랜을 추천해요! 단단하게 삶을 가꿔봐요.';
-      default:
-        return '당신만의 든든한 일정을 추천해드릴게요.';
-    }
-  };
-
-  const handleNext = () => {
-    onNext(selectedDuration);
-  };
+  const period = PERIOD_CATALOG[goalId] ?? DEFAULT_PERIOD;
 
   return (
     <SafeAreaView style={tw`flex-1`}>
@@ -65,51 +49,34 @@ export default function OnboardingDuration({ onNext, onBack, onLater }: Onboardi
       >
         {/* Top Bar Navigation */}
         <View style={tw`flex-row justify-between items-center pt-2 pb-2 min-h-12`}>
-          {/* Left Group: Back Arrow and Step Indicators */}
           <View style={tw`flex-row items-center gap-x-3`}>
-            {/* Back Arrow */}
             <BackButton onPress={onBack} />
-
-            {/* Step Indicators */}
             <StepIndicator steps={['목표', '기간', '질문']} currentStepIndex={1} />
           </View>
-
-          {/* Later Button */}
           <LaterButton onPress={onLater} />
         </View>
 
-        {/* Header Content */}
+        {/* Header */}
         <View style={tw`h-24 justify-start`}>
           <HeaderSection
             label=""
-            title="두디가 이 호흡을 추천했어요"
+            title="두디가 이 호흡을 골라줬어요"
             subtitle={`지금 목표와 상태를 보고 정했어요.\n언제든 바꿀 수 있어요.`}
           />
         </View>
 
-        {/* Selection card with Pill Tabs */}
-        <View style={tw`bg-white rounded-3xl p-5 shadow-md border border-gray-100 w-full mt-4`}>
-          <View style={tw`flex-row bg-gray-50 p-1 rounded-2xl justify-between`}>
-            {durations.map((d) => {
-              const isActive = selectedDuration === d.id;
-              return (
-                <TouchableOpacity
-                  key={d.id}
-                  activeOpacity={0.8}
-                  onPress={() => setSelectedDuration(d.id)}
-                  style={tw`flex-grow py-3 px-2 rounded-xl items-center justify-center ${isActive ? `bg-[${COLORS.primary}]` : 'bg-transparent'
-                    }`}
-                >
-                  <Text style={tw`text-xs font-bold ${isActive ? 'text-white' : 'text-gray-400'}`}>
-                    {d.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+        {/* Period Display Card — 선택 UI 없음, 표시만 */}
+        <View style={tw`bg-white rounded-3xl p-6 shadow-md border border-gray-100 w-full mt-4 items-center`}>
+          {/* Period Badge */}
+          <View style={tw`bg-[${COLORS.primary}] px-8 py-3 rounded-2xl mb-4`}>
+            <Text style={tw`text-white text-2xl font-black tracking-wide`}>
+              {period.label}
+            </Text>
           </View>
 
-          <Text style={tw`text-gray-900 text-sm font-bold text-center mt-5 leading-relaxed`}>
-            {getHelperText()}
+          {/* Description */}
+          <Text style={tw`text-gray-700 text-sm font-bold text-center leading-relaxed`}>
+            {period.description}
           </Text>
         </View>
 
@@ -124,7 +91,7 @@ export default function OnboardingDuration({ onNext, onBack, onLater }: Onboardi
         <View style={tw`w-full`}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={handleNext}
+            onPress={onNext}
             style={tw`bg-[${COLORS.primary}] py-4 rounded-3xl w-full items-center shadow-lg`}
           >
             <Text style={tw`text-white font-bold text-lg`}>

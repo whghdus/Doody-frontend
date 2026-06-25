@@ -106,7 +106,7 @@ export default function IndependenceSwapModal({
           </Text>
         </View>
 
-        <ScrollView contentContainerStyle={tw`px-6 pb-32`} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={tw`px-6 pb-40`} showsVerticalScrollIndicator={false}>
           {/* Encouragement Box */}
           <View style={tw`bg-[#E6F4EA] rounded-2xl py-6 px-4 items-center mb-8`}>
             <Text style={tw`text-[#008C75] font-bold text-base text-center`}>
@@ -174,7 +174,7 @@ export default function IndependenceSwapModal({
         </ScrollView>
 
         {/* Bottom Buttons */}
-        <View style={tw`absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-6 pb-10 flex-row gap-x-3`}>
+        <View style={[tw`absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 pt-6 flex-row gap-x-3`, { paddingBottom: Math.max(insets.bottom + 24, 40) }]}>
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={onRest}

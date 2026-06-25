@@ -142,8 +142,8 @@ export default function App() {
               {(props: any) => (
                 <ScreenWrapper>
                   <OnboardingDuration
-                    onNext={(duration) => {
-                      useOnboardingStore.getState().setSelectedDuration(duration);
+                    goalId={useOnboardingStore.getState().selectedGoal}
+                    onNext={() => {
                       props.navigation.navigate('OnboardingQuestions');
                     }}
                     onBack={() => props.navigation.goBack()}

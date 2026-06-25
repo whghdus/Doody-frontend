@@ -6,9 +6,15 @@ import Svg, { Path, Circle, Line } from 'react-native-svg';
 import tw from 'twrnc';
 import { COLORS } from '../../constants/theme';
 
-// Dummy SVG for Doody preview
+import DoodySvg from '../../assets/doody/Doody.webp';
+import BrushDoodySvg from '../../assets/doody/brushDoody.webp';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
+import SadDoodySvg from '../../assets/doody/sadDoody.webp';
+import SmileDoodySvg from '../../assets/doody/smileDoody.webp';
 import SimpleBackButton from '../../components/common/SimpleBackButton';
+import { useCollectionStore } from '../../store/useCollectionStore';
+
+const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg];
 
 interface ReportScreenProps {
   onBack: () => void;
@@ -20,6 +26,14 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
   const [timeRange, setTimeRange] = useState<'week' | 'month'>('month');
   const [categoryTab, setCategoryTab] = useState<'rhythm' | 'independence' | 'connection'>('independence');
   const [timelineLimit, setTimelineLimit] = useState(3);
+  const { unlockedDoodies } = useCollectionStore();
+
+  // Build 6 preview slots: show unlocked doodies first, then locked placeholders
+  const previewSlots = Array.from({ length: 6 }).map((_, i) => {
+    const isUnlocked = unlockedDoodies.includes(i);
+    const hasImage = i < DOODY_SVGS.length;
+    return { index: i, isUnlocked, SvgComponent: hasImage ? DOODY_SVGS[i] : null };
+  });
 
   // Dummy timeline data
   const timelineData = [
@@ -197,19 +211,40 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
             <Text style={tw`text-gray-500 text-xs font-bold`}>&gt;</Text>
           </TouchableOpacity>
 
-          {/* Doody Preview Grid (3 cols x 2 rows = 6 items) */}
+          {/* Doody Preview Grid — real data from useCollectionStore */}
           <View style={tw`bg-white rounded-3xl p-4 border border-[rgba(0,140,117,0.15)] flex-row flex-wrap justify-between`}>
-            {Array.from({ length: 6 }).map((_, i) => (
+            {previewSlots.map((slot) => (
               <TouchableOpacity
-                key={i}
+                key={slot.index}
                 activeOpacity={0.7}
-                onPress={() => onDoodyClick(`preview_${i}`)}
-                style={tw`w-[30%] aspect-square bg-white border border-[rgba(0,140,117,0.15)] rounded-2xl mb-3 items-center justify-center p-2`}
+                disabled={!slot.isUnlocked}
+                onPress={() => onDoodyClick(`doody_${slot.index}`)}
+                style={tw`w-[30%] aspect-square bg-white border border-[rgba(0,140,117,0.15)] rounded-2xl mb-3 items-center justify-center p-2 ${!slot.isUnlocked ? 'bg-gray-50' : ''}`}
               >
-                <Image source={HappyDoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+                {slot.SvgComponent ? (
+                  <Image
+                    source={slot.SvgComponent}
+                    style={{ width: '100%', height: '100%', opacity: slot.isUnlocked ? 1 : 0.25 }}
+                    contentFit="contain"
+                  />
+                ) : (
+                  <Text style={tw`text-gray-300 font-bold text-2xl`}>?</Text>
+                )}
+                {/* Lock icon overlay for locked doodies */}
+                {!slot.isUnlocked && slot.SvgComponent && (
+                  <View style={tw`absolute inset-0 items-center justify-center`}>
+                    <Text style={tw`text-gray-300 text-lg`}>🔒</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             ))}
           </View>
+
+          {unlockedDoodies.length === 0 && (
+            <Text style={tw`text-gray-400 text-xs text-center mt-2`}>
+              두디를 잡으면 도감이 채워져요 🐣
+            </Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

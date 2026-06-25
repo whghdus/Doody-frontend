@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 // src/screens/connection/ConnectionScreen.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -42,6 +42,21 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
   const [institutions, setInstitutions] = useState<any[]>([]);
+  const mapRef = useRef<MapView>(null);
+  // Ref tracks current region without triggering rerenders during animation
+  const regionRef = useRef<Region | null>(null);
+
+  const handleGoToMyLocation = () => {
+    if (location) {
+      setRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      });
+      fetchInstitutions(location.coords.latitude, location.coords.longitude);
+    }
+  };
 
   useEffect(() => {
     if (viewState === 'catch' || viewState === 'success' || viewState === 'unlock') {
@@ -58,12 +73,14 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
         Alert.alert('위치 권한 필요', '지도 기능을 사용하려면 위치 권한이 필요합니다.');
         const fallbackLat = 37.5665;
         const fallbackLon = 126.9780;
-        setRegion({
+        const fallbackRegion = {
           latitude: fallbackLat,
           longitude: fallbackLon,
           latitudeDelta: 0.02,
           longitudeDelta: 0.02,
-        });
+        };
+        regionRef.current = fallbackRegion;
+        setRegion(fallbackRegion);
         fetchInstitutions(fallbackLat, fallbackLon);
         return;
       }
@@ -71,23 +88,27 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
       try {
         let loc = await Location.getCurrentPositionAsync({});
         setLocation(loc);
-        setRegion({
+        const initialRegion = {
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
           latitudeDelta: 0.02,
           longitudeDelta: 0.02,
-        });
+        };
+        regionRef.current = initialRegion;
+        setRegion(initialRegion);
         fetchInstitutions(loc.coords.latitude, loc.coords.longitude);
       } catch (error) {
         console.error("Location error:", error);
         const fallbackLat = 37.5665;
         const fallbackLon = 126.9780;
-        setRegion({
+        const fallbackRegion2 = {
           latitude: fallbackLat,
           longitude: fallbackLon,
           latitudeDelta: 0.02,
           longitudeDelta: 0.02,
-        });
+        };
+        regionRef.current = fallbackRegion2;
+        setRegion(fallbackRegion2);
         fetchInstitutions(fallbackLat, fallbackLon);
       }
     })();
@@ -105,7 +126,7 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
 
   const fetchInstitutions = async (lat: number, lon: number) => {
     try {
-      const query = `[out:json];(node["amenity"="townhall"](around:5000,${lat},${lon});node["amenity"="public_building"](around:5000,${lat},${lon});node["amenity"="library"](around:5000,${lat},${lon}););out body;`;
+      const query = `[out:json][timeout:10];(node["name"~"하나은행"](around:2000,${lat},${lon});node["name"~"청년센터"](around:2000,${lat},${lon});node["amenity"="bank"]["name"~"하나"](around:2000,${lat},${lon}););out body;`;
       const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
       
       if (!response.ok) {
@@ -116,9 +137,9 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
       let elements = data.elements || [];
       if (elements.length === 0) {
         elements = [
-          { id: 1, lat: lat + 0.005, lon: lon + 0.005, tags: { name: '가상 주민센터' } },
-          { id: 2, lat: lat - 0.003, lon: lon + 0.006, tags: { name: '가상 구청' } },
-          { id: 3, lat: lat + 0.002, lon: lon - 0.004, tags: { name: '가상 도서관' } },
+          { id: 1, lat: lat + 0.005, lon: lon + 0.005, tags: { name: '가상 하나은행' } },
+          { id: 2, lat: lat - 0.003, lon: lon + 0.006, tags: { name: '가상 청년센터' } },
+          { id: 3, lat: lat + 0.002, lon: lon - 0.004, tags: { name: '가상 하나은행 본점' } },
         ];
       }
 
@@ -131,9 +152,9 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
     } catch (e) {
       console.error('Overpass API error:', e);
       setInstitutions([
-        { id: 1, lat: lat + 0.005, lon: lon + 0.005, tags: { name: '가상 주민센터' }, doodyIndex: 0 },
-        { id: 2, lat: lat - 0.003, lon: lon + 0.006, tags: { name: '가상 구청' }, doodyIndex: 1 },
-        { id: 3, lat: lat + 0.002, lon: lon - 0.004, tags: { name: '가상 도서관' }, doodyIndex: 2 },
+        { id: 1, lat: lat + 0.005, lon: lon + 0.005, tags: { name: '가상 하나은행' }, doodyIndex: 0 },
+        { id: 2, lat: lat - 0.003, lon: lon + 0.006, tags: { name: '가상 청년센터' }, doodyIndex: 1 },
+        { id: 3, lat: lat + 0.002, lon: lon - 0.004, tags: { name: '가상 하나은행 본점' }, doodyIndex: 2 },
       ]);
     }
   };
@@ -194,11 +215,15 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
       {/* Map Layer */}
       {region ? (
         <MapView
+          ref={mapRef}
           style={tw`flex-1 absolute inset-0`}
-          initialRegion={region}
+          region={region ?? undefined}
           showsUserLocation={true}
           showsMyLocationButton={false}
-          onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
+          onRegionChangeComplete={(newRegion) => {
+            regionRef.current = newRegion;
+            setRegion(newRegion);
+          }}
         >
           <UrlTile
             urlTemplate="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -220,7 +245,7 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
               >
                 <View style={tw`items-center`}>
                   <View style={tw`bg-[#222] px-3 py-1 rounded-full mb-1 shadow-sm`}>
-                    <Text style={tw`text-white font-bold text-[10px]`}>{inst.tags?.name || '공공기관'}</Text>
+                    <Text style={tw`text-white font-bold text-[10px]`}>{inst.tags?.name || '청년센터/하나은행'}</Text>
                   </View>
                   <View style={tw`w-14 h-14 bg-[#E1EDE4] rounded-full border-2 border-[#008C75] items-center justify-center shadow-md`}>
                     <View style={tw`w-10 h-10`}>
@@ -242,6 +267,19 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
       {/* Dynamic Island background hiding */}
       <View style={[tw`absolute top-0 left-0 right-0 bg-[#E1EDE4]/90 z-50`, { height: insets.top }]} />
 
+      {/* --- Top Search Button --- */}
+      <View style={[tw`absolute w-full items-center z-30`, { top: insets.top + 16 }]}>
+        <TouchableOpacity
+          onPress={() => {
+            if (region) fetchInstitutions(region.latitude, region.longitude);
+          }}
+          style={tw`bg-white rounded-full px-5 py-2.5 shadow-md border border-gray-100 flex-row items-center`}
+        >
+          <Feather name="rotate-cw" size={16} color="#008C75" style={tw`mr-2`} />
+          <Text style={tw`text-[#008C75] font-bold text-sm`}>이 지역 탐색</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* --- Right Floating Controls --- */}
       <View style={[tw`absolute z-20`, { right: 20, top: insets.top + 20 }]}>
         <View style={tw`bg-white/90 rounded-2xl shadow-sm mb-4 overflow-hidden`}>
@@ -253,17 +291,8 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
           </TouchableOpacity>
         </View>
         <TouchableOpacity 
-          style={tw`bg-white/90 rounded-full p-3 shadow-sm items-center`}
-          onPress={() => {
-            if (location) {
-              setRegion({
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.02,
-                longitudeDelta: 0.02,
-              });
-            }
-          }}
+          style={tw`bg-white/90 rounded-full p-3 shadow-sm items-center mt-2`}
+          onPress={handleGoToMyLocation}
         >
           <Feather name="crosshair" size={20} color="#333" />
         </TouchableOpacity>
@@ -272,7 +301,7 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
       {/* --- Bottom Card --- */}
       <View style={[tw`absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl pt-8 px-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-40`, { paddingBottom: insets.bottom + 90 }]}>
         <Text style={tw`text-gray-900 font-black text-lg mb-1`}>
-          가까운 공공기관 핀을 누르면 <Text style={tw`text-[#008C75]`}>나가보기</Text>.
+          가까운 청년센터나 하나은행 핀을 누르면 <Text style={tw`text-[#008C75]`}>나가보기</Text>.
         </Text>
         <Text style={tw`text-gray-900 font-black text-lg mb-6`}>
           도착하면 카메라로

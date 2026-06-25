@@ -1,7 +1,8 @@
 import { Image } from 'expo-image';
 // src/screens/report/DoodyCollectionScreen.tsx
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import tw from 'twrnc';
 
@@ -22,6 +23,7 @@ interface DoodyCollectionScreenProps {
 
 export default function DoodyCollectionScreen({ onBack, onDoodyClick }: DoodyCollectionScreenProps) {
   const { unlockedDoodies } = useCollectionStore();
+  const insets = useSafeAreaInsets();
 
   // Create 12 slots
   const gridSlots = Array.from({ length: 12 }).map((_, i) => {
@@ -39,7 +41,7 @@ export default function DoodyCollectionScreen({ onBack, onDoodyClick }: DoodyCol
   });
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-white`}>
+    <View style={[tw`flex-1 bg-white`, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={tw`flex-row items-center px-6 pt-4 pb-4 bg-white z-10`}>
         <SimpleBackButton onPress={onBack} style={tw`mr-4`} />
@@ -73,6 +75,6 @@ export default function DoodyCollectionScreen({ onBack, onDoodyClick }: DoodyCol
           </View>
         </ScrollView>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -6,10 +6,13 @@ import {
   TouchableOpacity,
   Dimensions,
   Animated,
+  Text,
+  StyleSheet,
 } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { StatusBar } from 'expo-status-bar';
 import tw from 'twrnc';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Background from '../../components/common/Background';
 import DoodySvg from '../../assets/doody/Doody.webp';
 import BrushDoodySvg from '../../assets/doody/brushDoody.webp';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
@@ -32,6 +35,7 @@ interface CatchScreenProps {
 
 export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex = 0 }: CatchScreenProps) {
   const insets = useSafeAreaInsets();
+  const [permission, requestPermission] = useCameraPermissions();
   
   // Simple floating animation for the Doody
   const floatAnim = useRef(new Animated.Value(0)).current;
@@ -55,16 +59,40 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
 
   const SvgComponent = DOODY_SVGS[doodyIndex];
 
-  return (
-    <View style={tw`flex-1`}>
-      {/* Fake Camera Background using standard day background */}
-      <Background theme="day">
+  if (!permission) {
+    // Camera permissions are still loading.
+    return <View style={tw`flex-1 bg-black`} />;
+  }
 
+  if (!permission.granted) {
+    // Camera permissions are not granted yet.
+    return (
+      <View style={tw`flex-1 justify-center items-center bg-gray-100`}>
+        <Text style={tw`text-lg font-bold mb-4 text-center px-4`}>두디를 잡기 위해 카메라 권한이 필요합니다.</Text>
+        <TouchableOpacity onPress={requestPermission} style={tw`bg-teal-500 px-6 py-3 rounded-full`}>
+          <Text style={tw`text-white font-bold`}>권한 허용하기</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onGoHome} style={tw`mt-4`}>
+          <Text style={tw`text-gray-500`}>홈으로 돌아가기</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={tw`flex-1 bg-black`}>
+      <StatusBar style="light" translucent backgroundColor="transparent" />
+      {/* Live Camera Background taking full screen including safe areas */}
+      <CameraView style={StyleSheet.absoluteFillObject} facing="back" />
+
+      {/* UI Elements constrained by Safe Area */}
+      <View style={[tw`flex-1`, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        
         {/* Center Target & Doody */}
         <View style={tw`flex-1 justify-center items-center relative`}>
           {/* Dashed Target Circle */}
           <View style={[
-            tw`absolute border-4 border-dashed border-gray-900 rounded-full`, 
+            tw`absolute border-4 border-dashed border-white rounded-full`, 
             { width: width * 0.8, height: width * 0.8, opacity: 0.8 }
           ]} />
           
@@ -75,9 +103,9 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
         </View>
 
         {/* Bottom Catch Controls */}
-        <View style={[tw`flex-row justify-between items-center px-10 w-full pb-10 z-20`, { paddingBottom: Math.max(insets.bottom + 40, 40) }]}>
+        <View style={[tw`flex-row justify-between items-center px-10 w-full pb-10 z-20`]}>
           
-          <TouchableOpacity onPress={onGoHome} style={tw`w-14 h-14 bg-white rounded-2xl items-center justify-center shadow-sm`}>
+          <TouchableOpacity onPress={onGoHome} style={tw`w-14 h-14 bg-white/80 rounded-2xl items-center justify-center shadow-sm`}>
             <HomeSvg width={24} height={24} color="#008C75" />
           </TouchableOpacity>
 
@@ -89,13 +117,13 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
             <BallSvg width="100%" height="100%" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={onGoToMap} style={tw`w-14 h-14 bg-white rounded-2xl items-center justify-center shadow-sm`}>
+          <TouchableOpacity onPress={onGoToMap} style={tw`w-14 h-14 bg-white/80 rounded-2xl items-center justify-center shadow-sm`}>
             <Feather name="map-pin" size={24} color="#008C75" />
           </TouchableOpacity>
 
         </View>
 
-      </Background>
+      </View>
     </View>
   );
 }

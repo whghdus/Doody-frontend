@@ -1,14 +1,29 @@
 import { Image } from 'expo-image';
 // src/screens/report/DoodyDetailScreen.tsx
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import tw from 'twrnc';
 import { COLORS } from '../../constants/theme';
 
-// Doody Images (Dummy)
+import DoodySvg from '../../assets/doody/Doody.webp';
+import BrushDoodySvg from '../../assets/doody/brushDoody.webp';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
+import SadDoodySvg from '../../assets/doody/sadDoody.webp';
+import SmileDoodySvg from '../../assets/doody/smileDoody.webp';
 import SimpleBackButton from '../../components/common/SimpleBackButton';
+import { useCollectionStore } from '../../store/useCollectionStore';
+
+const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg];
+
+const DOODY_CATALOG = [
+  { name: '두디',       description: '기본 두디예요. 어디서나 나타나 조용히 곁에 있어 줘요. 가장 먼저 만날 수 있어요.' },
+  { name: '붓 두디',   description: '창의력이 넘치는 두디예요. 무언가를 만들고 기록하는 걸 좋아해요.' },
+  { name: '해피 두디', description: '항상 웃고 있는 두디예요. 미션을 완료할수록 더 자주 나타나요.' },
+  { name: '슬픈 두디', description: '오늘 좀 힘든 날에 나타나요. 옆에서 같이 있어줄게요.' },
+  { name: '스마일 두디', description: '따뜻한 미소를 가진 두디예요. 꾸준히 해낸 날 당신 곁으로 달려와요.' },
+];
 
 interface DoodyDetailScreenProps {
   doodyId: string;
@@ -16,33 +31,31 @@ interface DoodyDetailScreenProps {
 }
 
 export default function DoodyDetailScreen({ doodyId, onBack }: DoodyDetailScreenProps) {
-  // Dummy Data
-  const doodyInfo = {
-    name: '두디 이름',
-    description: '따뜻한 햇살이 내리쬐는 공원과 숲 근처에 자주 나타나는 병아리 정령이에요. 사람이 자연에 가까이 올수록 더 활발하게 움직이며, 포획되면 주인의 야외 활동을 응원해준대요.',
-    acquisition: {
-      title: '방법쏼라쏼라',
-      date: '2026.06.21',
-      badge: '자립온',
-      body: '상세완료 방법 어쩌구저ㄲ쩌구...\n상세완료 방법 어쩌구저ㄲ쩌구...\n상세완료 방법 어쩌구저ㄲ쩌구...\n상세완료 방법 어쩌구저ㄲ쩌구...',
-    }
-  };
+  const { unlockedDoodies } = useCollectionStore();
+  const insets = useSafeAreaInsets();
+
+  // Parse index from doodyId (format: 'doody_N')
+  const index = parseInt(doodyId.replace('doody_', ''), 10);
+  const isValidIndex = !isNaN(index) && index >= 0 && index < DOODY_CATALOG.length;
+  const catalog = isValidIndex ? DOODY_CATALOG[index] : DOODY_CATALOG[0];
+  const SvgComponent = isValidIndex ? DOODY_SVGS[index] : DOODY_SVGS[2];
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-[#F5F5F5]`}>
+    <View style={[tw`flex-1 bg-white`, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={tw`flex-row items-center px-6 pt-4 pb-4 bg-white z-10`}>
         <SimpleBackButton onPress={onBack} style={tw`mr-4`} />
         <Text style={tw`flex-1 text-center text-gray-900 text-xl font-bold pr-12`}>
-          {doodyInfo.name}
+          {catalog.name}
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={tw`flex-grow px-6 pb-24`} showsVerticalScrollIndicator={false}>
+      <View style={tw`flex-1 bg-[#F5F5F5]`}>
+        <ScrollView contentContainerStyle={tw`flex-grow px-6 pb-24`} showsVerticalScrollIndicator={false}>
         {/* Doody Image */}
         <View style={tw`items-center justify-center py-10`}>
           <View style={tw`w-48 h-48`}>
-            <Image source={HappyDoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+            <Image source={SvgComponent} style={{ width: '100%', height: '100%' }} contentFit="contain" />
           </View>
         </View>
 
@@ -51,7 +64,7 @@ export default function DoodyDetailScreen({ doodyId, onBack }: DoodyDetailScreen
           <Text style={tw`text-[${COLORS.primary}] text-sm font-bold mb-2`}>소개</Text>
           <View style={tw`bg-white border border-[${COLORS.primary}] rounded-2xl p-5 shadow-sm`}>
             <Text style={tw`text-gray-700 leading-relaxed`}>
-              {doodyInfo.description}
+              {catalog.description}
             </Text>
           </View>
         </View>
@@ -60,27 +73,17 @@ export default function DoodyDetailScreen({ doodyId, onBack }: DoodyDetailScreen
         <View style={tw`mb-8`}>
           <Text style={tw`text-[${COLORS.primary}] text-sm font-bold mb-2`}>획득 방법</Text>
           <View style={tw`bg-white border border-[${COLORS.primary}] rounded-2xl p-5 shadow-sm`}>
-            {/* Header row */}
             <View style={tw`flex-row items-center justify-between border-b border-gray-100 pb-3 mb-3`}>
               <View style={tw`flex-row items-center`}>
                 <View style={tw`w-2 h-2 rounded-full bg-[${COLORS.primary}] mr-2`} />
-                <Text style={tw`text-gray-900 font-bold`}>{doodyInfo.acquisition.title}</Text>
+                <Text style={tw`text-gray-900 font-bold`}>청년센터/하나은행 두디 포획</Text>
               </View>
-              <View style={tw`flex-row items-center`}>
-                <Text style={tw`text-[${COLORS.primary}] text-xs font-bold mr-2`}>
-                  {doodyInfo.acquisition.date}
-                </Text>
-                <View style={tw`bg-[#EEF7F5] px-2 py-0.5 rounded-full`}>
-                  <Text style={tw`text-[${COLORS.primary}] text-[10px] font-bold`}>
-                    {doodyInfo.acquisition.badge}
-                  </Text>
-                </View>
+              <View style={tw`bg-[#EEF7F5] px-2 py-0.5 rounded-full`}>
+                <Text style={tw`text-[${COLORS.primary}] text-[10px] font-bold`}>연결</Text>
               </View>
             </View>
-            
-            {/* Body */}
             <Text style={tw`text-gray-700 leading-relaxed`}>
-              {doodyInfo.acquisition.body}
+              지도에서 가까운 청년센터나 하나은행을 방문하고,{`\n`}카메라로 두디를 잡아보세요!
             </Text>
           </View>
         </View>
@@ -94,7 +97,8 @@ export default function DoodyDetailScreen({ doodyId, onBack }: DoodyDetailScreen
         >
           <Text style={tw`text-white font-bold text-base`}>두디 잡으러 가기</Text>
         </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </View>
+    </View>
   );
 }
