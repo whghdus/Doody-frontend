@@ -4,8 +4,16 @@
     "slug": "Doody",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/LOGO.svg",
+    "icon": "./assets/favicon.png",
     "userInterfaceStyle": "light",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "앱에서 프로필 사진 변경을 위해 갤러리 접근 권한이 필요합니다."
+        }
+      ]
+    ],
     
     
     "ios": {
@@ -18,7 +26,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/LOGO.svg"
+        "foregroundImage": "./assets/favicon.png"
       }
     },
     

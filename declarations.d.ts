@@ -5,3 +5,25 @@ declare module '*.svg' {
   const content: React.FC<SvgProps>;
   export default content;
 }
+
+declare module '*.png' {
+  const content: any;
+  export default content;
+}
+
+declare module '*.jpg' {
+  const content: any;
+  export default content;
+}
+
+declare module '*.jpeg' {
+  const content: any;
+  export default content;
+}
+
+declare module '*.webp' {
+  const content: any;
+  export default content;
+}
+
+declare module 'react-native-keyboard-aware-scroll-view';

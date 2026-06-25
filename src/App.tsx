@@ -1,29 +1,222 @@
 // src/App.tsx
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import tw from 'twrnc';
+import { useOnboardingStore } from './store/useOnboardingStore';
+import Background from './components/common/Background';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 1. SVG 파일을 컴포넌트처럼 import 합니다.
-import DoodyLogo from '../assets/LOGO.svg';
+// Auth screens
+import LandingScreen from './screens/auth/LandingScreen';
+import SignupScreen from './screens/auth/SignupScreen';
+import LoginScreen from './screens/auth/LoginScreen';
+
+// Onboarding screens
+import OnboardingScreen1 from './screens/onboarding/OnboardingScreen1';
+import OnboardingGoal from './screens/onboarding/OnboardingGoal';
+import OnboardingDuration from './screens/onboarding/OnboardingDuration';
+import OnboardingQuestions from './screens/onboarding/OnboardingQuestions';
+import OnboardingMyData from './screens/onboarding/OnboardingMyData';
+import OnboardingSummary from './screens/onboarding/OnboardingSummary';
+import OnboardingHatch from './screens/onboarding/OnboardingHatch';
+
+// Home Screen
+import HomeScreen from './screens/home/HomeScreen';
+
+const Stack = createNativeStackNavigator();
+
+// A wrapper to maintain the Background on all Onboarding/Auth screens
+const ScreenWrapper = ({ children, theme = "day" }: { children: React.ReactNode, theme?: "day"|"night" }) => (
+  <Background theme={theme}>
+    {children}
+  </Background>
+);
 
 export default function App() {
-  return (
-    <View style={tw`flex-1 bg-gray-100 items-center justify-center p-4`}>
-      <StatusBar style="auto" />
-      <View style={tw`bg-white p-6 rounded-2xl shadow-md border border-gray-200 items-center`}>
-        
-        {/* 2. import한 SVG 컴포넌트를 사용하고 크기와 색상을 조절합니다. */}
-        <View style={tw`w-16 h-16 mb-4`}>
-          <DoodyLogo width="100%" height="100%" fill={tw.color('blue-600')} />
-        </View>
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [initialRoute, setInitialRoute] = useState('Landing');
 
-        <Text style={tw`text-2xl font-bold text-blue-600 text-center`}>
-          Doody 세팅 완료!
-        </Text>
-        <Text style={tw`text-gray-500 mt-2 text-center`}>
-          React Native + Expo 54 + twrnc
-        </Text>
+  useEffect(() => {
+    const initApp = async () => {
+      try {
+        // Here you can check async storage for auto login
+        // const email = await AsyncStorage.getItem('userEmail');
+        // if (email) setInitialRoute('Home');
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+    initApp();
+  }, []);
+
+  if (isInitializing) {
+    return null;
+  }
+
+  return (
+    <SafeAreaProvider>
+      <View style={tw`flex-1 bg-white`}>
+        <StatusBar style="auto" />
+        <NavigationContainer>
+          <Stack.Navigator
+            initialRouteName={initialRoute}
+            screenOptions={{
+              headerShown: false,
+              animation: 'slide_from_right', // iOS-like natural slide animation
+              contentStyle: { backgroundColor: 'transparent' }
+            }}
+          >
+            <Stack.Screen name="Landing">
+              {(props: any) => (
+                <ScreenWrapper>
+                  <LandingScreen 
+                    onSignupClick={() => props.navigation.navigate('Signup')} 
+                    onLoginClick={() => props.navigation.navigate('Login')} 
+                  />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen name="Signup">
+              {(props: any) => (
+                <ScreenWrapper>
+                  <SignupScreen 
+                    onSignup={(email, nickname) => {
+                      useOnboardingStore.getState().setUserEmail(email);
+                      useOnboardingStore.getState().setUserNickname(nickname);
+                      props.navigation.navigate('Onboarding1');
+                    }} 
+                    onBack={() => props.navigation.goBack()} 
+                  />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen name="Login">
+              {(props: any) => (
+                <ScreenWrapper>
+                  <LoginScreen 
+                    onLogin={(email, nickname) => {
+                      useOnboardingStore.getState().setUserEmail(email);
+                      useOnboardingStore.getState().setUserNickname(nickname);
+                      props.navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+                    }} 
+                    onBack={() => props.navigation.goBack()} 
+                  />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen name="Onboarding1">
+              {(props: any) => (
+                <ScreenWrapper>
+                  <OnboardingScreen1 onNext={(selectedId) => {
+                    useOnboardingStore.getState().setSelectedCategory(selectedId);
+                    props.navigation.navigate('OnboardingGoal');
+                  }} />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen name="OnboardingGoal">
+              {(props: any) => (
+                <ScreenWrapper>
+                  <OnboardingGoal
+                    onNext={(goalId) => {
+                      useOnboardingStore.getState().setSelectedGoal(goalId);
+                      props.navigation.navigate('OnboardingDuration');
+                    }}
+                    onLater={() => props.navigation.navigate('OnboardingSummary')}
+                  />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen name="OnboardingDuration">
+              {(props: any) => (
+                <ScreenWrapper>
+                  <OnboardingDuration
+                    goalId={useOnboardingStore.getState().selectedGoal}
+                    onNext={() => {
+                      props.navigation.navigate('OnboardingQuestions');
+                    }}
+                    onBack={() => props.navigation.goBack()}
+                    onLater={() => props.navigation.navigate('OnboardingSummary')}
+                  />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen name="OnboardingQuestions">
+              {(props: any) => (
+                <ScreenWrapper>
+                  <OnboardingQuestions
+                    onNext={(answers) => {
+                      const dailyScore = ['나쁘지 않아', '그냥 그래', '잘 모르겠어', '좀 지쳐 있어'].indexOf(answers.daily);
+                      const spendingScore = ['나쁘지 않아', '잘 모르겠어', '부담스러웠어', '불만 했어'].indexOf(answers.spending);
+                      const contactScore = ['할만 했어', '나쁘지 않아', '잘 모르겠어', '부담스러웠어'].indexOf(answers.contact);
+                      useOnboardingStore.getState().setMoodAnswers(answers);
+                      useOnboardingStore.getState().setOnboardingScores({
+                        rhythm: Math.max(0, dailyScore),
+                        independence: Math.max(0, spendingScore),
+                        connection: Math.max(0, contactScore),
+                      });
+                      props.navigation.navigate('OnboardingMyData');
+                    }}
+                    onBack={() => props.navigation.goBack()}
+                  />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen name="OnboardingMyData">
+              {(props: any) => (
+                <ScreenWrapper>
+                  <OnboardingMyData onConsent={(consent) => {
+                    useOnboardingStore.getState().setMydataConsent(consent);
+                    props.navigation.navigate('OnboardingSummary');
+                  }} />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen name="OnboardingSummary">
+              {(props: any) => (
+                <ScreenWrapper>
+                  <OnboardingSummary onNext={() => props.navigation.navigate('OnboardingHatch')} />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen name="OnboardingHatch">
+              {(props: any) => (
+                <ScreenWrapper>
+                  <OnboardingHatch onFinish={() => {
+                    props.navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+                  }} />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+
+            <Stack.Screen name="Home" options={{ animation: 'fade' }}>
+              {(props: any) => (
+                <HomeScreen
+                  onRestartOnboarding={() => {
+                    useOnboardingStore.getState().setSelectedCategory(null);
+                    props.navigation.reset({ index: 0, routes: [{ name: 'Landing' }] });
+                  }}
+                />
+              )}
+            </Stack.Screen>
+          </Stack.Navigator>
+        </NavigationContainer>
       </View>
-    </View>
+    </SafeAreaProvider>
   );
 }
