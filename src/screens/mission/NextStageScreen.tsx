@@ -1,19 +1,23 @@
 import { Image } from 'expo-image';
 // src/screens/NextStageScreen.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   SafeAreaView,
   Platform,
+  Modal,
 } from 'react-native';
 import tw from 'twrnc';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Background from '../../components/common/Background';
 import CloseButton from '../../components/common/CloseButton';
 import SalaryDoodySvg from '../../assets/doody/salaryDoodt.webp';
+import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
 import GreenDoodySvg from '../../assets/doody/greenDoody.webp';
+import { useCollectionStore } from '../../store/useCollectionStore';
+import { hanaFinanceApi } from '../../api/hanaFinance';
 
 export type StageType = 'connection' | 'independence';
 
@@ -21,33 +25,83 @@ interface NextStageScreenProps {
   onClose: () => void;
   stageType?: StageType;
   onGoToStage?: () => void;
+  onGoToCollection?: () => void;
 }
 
-export default function NextStageScreen({ onClose, stageType = 'connection', onGoToStage }: NextStageScreenProps) {
+export default function NextStageScreen({ onClose, stageType = 'connection', onGoToStage, onGoToCollection }: NextStageScreenProps) {
   const insets = useSafeAreaInsets();
+  const { unlockDoody, fetchUnlockedDoodies } = useCollectionStore();
+  const [showBenefitModal, setShowBenefitModal] = useState(false);
+
+  React.useEffect(() => {
+    if (stageType === 'connection') {
+      unlockDoody(5);
+    } else {
+      unlockDoody(6);
+    }
+  }, [stageType, unlockDoody]);
 
   const isConnection = stageType === 'connection';
 
   const message = isConnection
-    ? '연결 기록이 많이 쌓였어요.\n이제 다음 단계가 열렸어요.'
-    : '자립 기록이 많이 쌓였어요.\n이제 다음 단계가 열렸어요.';
+    ? '연결 기록이 많이 쌓였구나!\n두디가 여기까지 온 너에게 주고싶은 게 있어!'
+    : '자립 기록이 많이 쌓였구나!\n두디가 여기까지 온 너에게 주고싶은 게 있어!';
 
   const stageLabel = isConnection ? '🌱 연결 단계 열림' : '🌱 자립 단계 열림';
-  const ctaLabel = isConnection ? '연결 혜택 바로가기' : '자립 혜택 바로가기';
+  const ctaLabel = isConnection ? '도감으로 가기' : '자립 혜택 바로가기';
 
-  // 연결 해금 = 정장 두디, 자립 해금 = 그린 두디
-  const DoodySvg = isConnection ? SalaryDoodySvg : GreenDoodySvg;
+  const DoodySvg = isConnection ? SalaryDoodySvg : HappyDoodySvg;
+
+  const handlePrimaryPress = async () => {
+    if (isConnection) {
+      try {
+        await hanaFinanceApi.unlockHanaFinance('CONNECTION');
+        // Optionally refresh collection
+        await fetchUnlockedDoodies();
+      } catch (err) {
+        console.error('Failed to unlock connection stage', err);
+      }
+      if (onGoToCollection) {
+        onGoToCollection();
+      } else {
+        onGoToStage?.();
+      }
+      onClose();
+    } else {
+      // For independence, open Screen 2 (Benefit Modal)
+      setShowBenefitModal(true);
+    }
+  };
+
+  const handleModalAction = async (claim: boolean) => {
+    setShowBenefitModal(false);
+    if (claim) {
+      try {
+        await hanaFinanceApi.unlockHanaFinance('AUTONOMY');
+        // Optionally refresh collection
+        await fetchUnlockedDoodies();
+      } catch (err) {
+        console.error('Failed to unlock autonomy stage', err);
+      }
+      if (onGoToCollection) {
+        onGoToCollection();
+      } else {
+        onGoToStage?.();
+      }
+    }
+    onClose();
+  };
 
   return (
     <View style={tw`flex-1`}>
       <Background theme="day">
         {/* Close Button */}
-        <View style={[tw`px-6`, { paddingTop: insets.top + 12 }]}>
+        <SafeAreaView style={[tw`absolute left-6 z-20`, { top: Platform.OS === 'ios' ? insets.top : 20 }]}>
           <CloseButton onPress={onClose} />
-        </View>
+        </SafeAreaView>
 
-        {/* Speech Bubble Card */}
-        <View style={tw`px-6 mt-4`}>
+        <View style={[tw`flex-1 px-6`, { paddingTop: Platform.OS === 'ios' ? insets.top + 70 : 80 }]}>
+          {/* Card Bubble */}
           <View style={tw`bg-white rounded-[24px] p-6 border border-[#008C75]/20 shadow-sm relative`}>
             {/* Doody Badge */}
             <View style={tw`flex-row items-center mb-3`}>
@@ -66,12 +120,12 @@ export default function NextStageScreen({ onClose, stageType = 'connection', onG
               { bottom: -8, left: 40 },
             ]} />
           </View>
-        </View>
 
-        {/* Doody Illustration */}
-        <View style={tw`flex-1 items-center justify-center`}>
-          <View style={tw`w-80 h-80 items-center justify-center`}>
-            <Image source={DoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+          {/* Doody Illustration */}
+          <View style={tw`flex-1 items-center justify-center`}>
+            <View style={tw`w-80 h-80 items-center justify-center`}>
+              <Image source={DoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+            </View>
           </View>
         </View>
 
@@ -86,10 +140,7 @@ export default function NextStageScreen({ onClose, stageType = 'connection', onG
             {/* Primary CTA */}
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => {
-                onGoToStage?.();
-                onClose();
-              }}
+              onPress={handlePrimaryPress}
               style={tw`bg-[#008C75] py-4 rounded-full items-center shadow-md`}
             >
               <Text style={tw`text-white text-base font-bold`}>
@@ -99,6 +150,76 @@ export default function NextStageScreen({ onClose, stageType = 'connection', onG
           </View>
         </View>
       </Background>
+
+      {/* Screen 2: Green Doody Autonomy Benefit Modal */}
+      <Modal
+        visible={showBenefitModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowBenefitModal(false)}
+      >
+        <View style={tw`flex-1 bg-black/50 justify-center items-center px-6`}>
+          <View style={tw`w-full bg-white rounded-[32px] p-6 items-center shadow-2xl`}>
+            {/* Modal Title */}
+            <Text style={tw`text-[#008C75] text-2xl font-black text-center mb-4`}>
+              하나 두디 획득!
+            </Text>
+
+            {/* Green Doody Illustration */}
+            <View style={tw`w-48 h-48 justify-center items-center mb-4`}>
+              <Image source={GreenDoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+            </View>
+
+            {/* Inner Info Container */}
+            <View style={tw`bg-[#EEF7F5] rounded-2xl p-4 w-full items-center mb-6`}>
+              <Text style={tw`text-[#008C75] font-black text-sm mb-2.5 text-center`}>
+                🌱 하나 증권 첫 시드
+              </Text>
+              
+              {/* Seed Amount Pill */}
+              <View style={tw`bg-[#FDF4D9] border border-[#F3C451] px-4 py-2 rounded-full flex-row items-center mb-2.5 shadow-sm`}>
+                <View style={tw`w-4.5 h-4.5 rounded-full bg-[#F5B800] items-center justify-center mr-2`}>
+                  <Text style={tw`text-white text-[10px] font-black`}>₩</Text>
+                </View>
+                <Text style={tw`text-[#7A5A00] text-xs font-black`}>
+                  투자 연습용 시드 100,000원
+                </Text>
+              </View>
+
+              <Text style={tw`text-[#008C75] text-[11px] font-bold text-center leading-relaxed`}>
+                언젠가 네가 첫 거래를 해보는 날, 이 돈은 진짜 너의 돈이 될거야!
+              </Text>
+            </View>
+
+            {/* Claim Button */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => handleModalAction(true)}
+              style={tw`w-full bg-[#008C75] py-4 rounded-full items-center justify-center shadow-md mb-3`}
+            >
+              <Text style={tw`text-white font-black text-base`}>
+                지금 바로 받을래
+              </Text>
+            </TouchableOpacity>
+
+            {/* Postpone Button */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => handleModalAction(false)}
+              style={tw`w-full bg-[#EAEAEA] py-4 rounded-full items-center justify-center mb-4`}
+            >
+              <Text style={tw`text-gray-700 font-bold text-base`}>
+                다음에 받을래
+              </Text>
+            </TouchableOpacity>
+
+            {/* Modal Footer Description */}
+            <Text style={tw`text-gray-400 text-[10px] text-center`}>
+              받으려면 하나증권이랑 연결돼. 안 받아도 두디는 옆에 있어!
+            </Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

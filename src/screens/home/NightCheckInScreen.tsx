@@ -20,6 +20,7 @@ import CloseButton from '../../components/common/CloseButton';
 import Background from '../../components/common/Background';
 import WriteDoodySvg from '../../assets/doody/writeDoody.webp';
 import MorningSuccessModal from '../../components/home/MorningSuccessModal';
+import { checkInApi } from '../../api/checkIn';
 
 interface NightCheckInScreenProps {
   onClose: () => void;
@@ -30,10 +31,17 @@ export default function NightCheckInScreen({ onClose }: NightCheckInScreenProps)
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (message.trim()) {
-      setSubmittedMessage(message.trim());
+      const msg = message.trim();
+      setSubmittedMessage(msg);
       setMessage('');
+
+      try {
+        await checkInApi.night('night_mood_default', msg);
+      } catch (error) {
+        console.error('Failed night check-in', error);
+      }
 
       // 2초 뒤에 성공 모달 표시
       setTimeout(() => {

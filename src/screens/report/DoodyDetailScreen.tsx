@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 // src/screens/report/DoodyDetailScreen.tsx
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import tw from 'twrnc';
@@ -12,10 +12,21 @@ import BrushDoodySvg from '../../assets/doody/brushDoody.webp';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
 import SadDoodySvg from '../../assets/doody/sadDoody.webp';
 import SmileDoodySvg from '../../assets/doody/smileDoody.webp';
+import SalaryDoodySvg from '../../assets/doody/salaryDoodt.webp';
+import GreenDoodySvg from '../../assets/doody/greenDoody.webp';
 import SimpleBackButton from '../../components/common/SimpleBackButton';
-import { useCollectionStore } from '../../store/useCollectionStore';
+import { useCollectionStore, mapDoodyIdToIndex } from '../../store/useCollectionStore';
+import { collectionApi, BackendDoodyCollectionResponse, BackendDoodyCollectionDetailResponse } from '../../api/collection';
 
-const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg];
+const DOODY_SVGS = [
+  DoodySvg, 
+  BrushDoodySvg, 
+  HappyDoodySvg, 
+  SadDoodySvg, 
+  SmileDoodySvg,
+  SalaryDoodySvg, // index 5
+  GreenDoodySvg   // index 6
+];
 
 const DOODY_CATALOG = [
   { name: '두디',       description: '기본 두디예요. 어디서나 나타나 조용히 곁에 있어 줘요. 가장 먼저 만날 수 있어요.' },
@@ -23,6 +34,8 @@ const DOODY_CATALOG = [
   { name: '해피 두디', description: '항상 웃고 있는 두디예요. 미션을 완료할수록 더 자주 나타나요.' },
   { name: '슬픈 두디', description: '오늘 좀 힘든 날에 나타나요. 옆에서 같이 있어줄게요.' },
   { name: '스마일 두디', description: '따뜻한 미소를 가진 두디예요. 꾸준히 해낸 날 당신 곁으로 달려와요.' },
+  { name: '양복 두디',   description: '연결 온 단계를 해금하면 만날 수 있는 스마트한 두디예요. 연결을 통해 성장했어요.' },
+  { name: '그린 두디',   description: '자립 온 단계를 해금하면 만날 수 있는 희망찬 두디예요. 스스로 자립할 수 있어요.' },
 ];
 
 interface DoodyDetailScreenProps {
@@ -31,7 +44,7 @@ interface DoodyDetailScreenProps {
 }
 
 export default function DoodyDetailScreen({ doodyId, onBack }: DoodyDetailScreenProps) {
-  const { unlockedDoodies } = useCollectionStore();
+  const { unlockedDoodies, collectedDoodies } = useCollectionStore();
   const insets = useSafeAreaInsets();
 
   // Parse index from doodyId (format: 'doody_N')
@@ -40,13 +53,36 @@ export default function DoodyDetailScreen({ doodyId, onBack }: DoodyDetailScreen
   const catalog = isValidIndex ? DOODY_CATALOG[index] : DOODY_CATALOG[0];
   const SvgComponent = isValidIndex ? DOODY_SVGS[index] : DOODY_SVGS[2];
 
+  const [detailData, setDetailData] = useState<BackendDoodyCollectionDetailResponse | null>(null);
+  const [fallbackData, setFallbackData] = useState<BackendDoodyCollectionResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      const collectedMatch = collectedDoodies.find(d => mapDoodyIdToIndex(d.doodyId) === index);
+      if (collectedMatch) {
+        setLoading(true);
+        try {
+          const detail = await collectionApi.getDoodyCollectionDetail(collectedMatch.doodyCollectionId);
+          setDetailData(detail);
+        } catch (error) {
+          console.error('Failed to fetch doody detail:', error);
+          setFallbackData(collectedMatch); // Fallback to list item data
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchDetail();
+  }, [index, collectedDoodies]);
+
   return (
     <View style={[tw`flex-1 bg-white`, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={tw`flex-row items-center px-6 pt-4 pb-4 bg-white z-10`}>
         <SimpleBackButton onPress={onBack} style={tw`mr-4`} />
         <Text style={tw`flex-1 text-center text-gray-900 text-xl font-bold pr-12`}>
-          {catalog.name}
+          {detailData?.name || fallbackData?.name || catalog.name}
         </Text>
       </View>
 
@@ -61,30 +97,64 @@ export default function DoodyDetailScreen({ doodyId, onBack }: DoodyDetailScreen
 
         {/* Info Card 1: 소개 */}
         <View style={tw`mb-6`}>
-          <Text style={tw`text-[${COLORS.primary}] text-sm font-bold mb-2`}>소개</Text>
+          <Text style={tw`text-[${COLORS.primary}] text-sm font-bold mb-2`}>
+            {detailData?.detail?.detailTitle || '소개'}
+          </Text>
           <View style={tw`bg-white border border-[${COLORS.primary}] rounded-2xl p-5 shadow-sm`}>
-            <Text style={tw`text-gray-700 leading-relaxed`}>
-              {catalog.description}
-            </Text>
+            {loading ? (
+              <ActivityIndicator size="small" color={COLORS.primary} style={tw`py-4`} />
+            ) : (
+              <>
+                <Text style={tw`text-gray-700 leading-relaxed`}>
+                  {detailData?.detail?.detailDescription || detailData?.description || catalog.description}
+                </Text>
+                {detailData?.detail?.personality && (
+                  <View style={tw`mt-3 pt-3 border-t border-gray-100`}>
+                    <Text style={tw`text-[${COLORS.primary}] text-xs font-bold mb-1`}>성격</Text>
+                    <Text style={tw`text-gray-600 text-xs`}>{detailData.detail.personality}</Text>
+                  </View>
+                )}
+              </>
+            )}
           </View>
         </View>
 
-        {/* Info Card 2: 획득 방법 */}
+        {/* Info Card 2: 획득 방법/정보 */}
         <View style={tw`mb-8`}>
-          <Text style={tw`text-[${COLORS.primary}] text-sm font-bold mb-2`}>획득 방법</Text>
+          <Text style={tw`text-[${COLORS.primary}] text-sm font-bold mb-2`}>
+            {detailData || fallbackData ? '획득 정보' : '획득 방법'}
+          </Text>
           <View style={tw`bg-white border border-[${COLORS.primary}] rounded-2xl p-5 shadow-sm`}>
-            <View style={tw`flex-row items-center justify-between border-b border-gray-100 pb-3 mb-3`}>
-              <View style={tw`flex-row items-center`}>
-                <View style={tw`w-2 h-2 rounded-full bg-[${COLORS.primary}] mr-2`} />
-                <Text style={tw`text-gray-900 font-bold`}>청년센터/하나은행 두디 포획</Text>
-              </View>
-              <View style={tw`bg-[#EEF7F5] px-2 py-0.5 rounded-full`}>
-                <Text style={tw`text-[${COLORS.primary}] text-[10px] font-bold`}>연결</Text>
-              </View>
-            </View>
-            <Text style={tw`text-gray-700 leading-relaxed`}>
-              지도에서 가까운 청년센터나 하나은행을 방문하고,{`\n`}카메라로 두디를 잡아보세요!
-            </Text>
+            {loading ? (
+              <ActivityIndicator size="small" color={COLORS.primary} style={tw`py-4`} />
+            ) : (
+              <>
+                <View style={tw`flex-row items-center justify-between border-b border-gray-100 pb-3 mb-3`}>
+                  <View style={tw`flex-row items-center`}>
+                    <View style={tw`w-2 h-2 rounded-full bg-[${COLORS.primary}] mr-2`} />
+                    <Text style={tw`text-gray-900 font-bold`}>
+                      {detailData ? (detailData.source || '미션 완료 보상') : fallbackData ? (fallbackData.source || '미션 완료 보상') : '청년센터/하나은행 두디 포획'}
+                    </Text>
+                  </View>
+                  {detailData?.axis || fallbackData?.axis ? (
+                    <View style={tw`bg-[#EEF7F5] px-2 py-0.5 rounded-full`}>
+                      <Text style={tw`text-[${COLORS.primary}] text-[10px] font-bold`}>{detailData?.axis || fallbackData?.axis}</Text>
+                    </View>
+                  ) : (
+                    <View style={tw`bg-[#EEF7F5] px-2 py-0.5 rounded-full`}>
+                      <Text style={tw`text-[${COLORS.primary}] text-[10px] font-bold`}>연결</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={tw`text-gray-700 leading-relaxed`}>
+                  {detailData 
+                    ? `${detailData.earnedReason || '자립/연결 활동을 통해 얻은 소중한 두디예요.'}\n\n획득일: ${new Date(detailData.collectedAt).toLocaleDateString('ko-KR')}`
+                    : fallbackData
+                    ? `${fallbackData.earnedReason || '자립/연결 활동을 통해 얻은 소중한 두디예요.'}\n\n획득일: ${new Date(fallbackData.collectedAt).toLocaleDateString('ko-KR')}`
+                    : `지도에서 가까운 청년센터나 하나은행을 방문하고,\n카메라로 두디를 잡아보세요!`}
+                </Text>
+              </>
+            )}
           </View>
         </View>
 

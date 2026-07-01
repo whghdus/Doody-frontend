@@ -16,6 +16,7 @@ import Background from '../../components/common/Background';
 import { COLORS } from '../../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SimpleBackButton from '../../components/common/SimpleBackButton';
+import { authApi } from '../../api/auth';
 
 interface SignupScreenProps {
   onSignup: (email: string, nickname: string) => void;
@@ -28,7 +29,7 @@ export default function SignupScreen({ onSignup, onBack }: SignupScreenProps) {
 
   const handleSignup = async () => {
     if (!nickname.trim()) {
-      Alert.alert('알림', '닉네인을 입력해주세요.');
+      Alert.alert('알림', '닉네임을 입력해주세요.');
       return;
     }
     if (!email.trim() || !email.includes('@')) {
