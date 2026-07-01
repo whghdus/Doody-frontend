@@ -18,6 +18,8 @@ import DoodyLogo from '../../assets/logos/doodyLogo.png';
 import { Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SimpleBackButton from '../../components/common/SimpleBackButton';
+import { authApi } from '../../api/auth';
+import { authStorage } from '../../utils/authStorage';
 
 interface LoginScreenProps {
   onLogin: (email: string, nickname: string) => void;
@@ -39,12 +41,21 @@ export default function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
     }
 
     try {
-      await AsyncStorage.setItem('userEmail', email.trim());
-      await AsyncStorage.setItem('userNickname', nickname.trim());
-      onLogin(email.trim(), nickname.trim());
-    } catch (error) {
-      console.error('Failed to save email to AsyncStorage', error);
-      Alert.alert('오류', '로그인 처리 중 문제가 발생했습니다.');
+      const response = await authApi.login(email.trim(), nickname.trim());
+      if (response.isSuccess && response.result) {
+        await authStorage.setToken(response.result.userId);
+        await AsyncStorage.setItem('userEmail', response.result.email);
+        await AsyncStorage.setItem('userNickname', response.result.nickname);
+        onLogin(response.result.email, response.result.nickname);
+      } else {
+        throw new Error(response.message || '로그인 실패');
+      }
+    } catch (error: any) {
+      console.error('Failed to log in', error);
+      Alert.alert(
+        '오류',
+        error.response?.data?.message || '로그인 처리 중 문제가 발생했습니다.'
+      );
     }
   };
 

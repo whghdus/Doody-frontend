@@ -23,10 +23,24 @@ import SadDoodySvg from '../../assets/doody/sadDoody.webp';
 import SmileDoodySvg from '../../assets/doody/smileDoody.webp';
 import ConnectionSuccessScreen from './ConnectionSuccessScreen';
 import NextStageScreen from '../mission/NextStageScreen';
+import { collectionPinApi } from '../../api/collectionPin';
+import { useCollectionStore } from '../../store/useCollectionStore';
 
 const { width, height } = Dimensions.get('window');
 
 const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg];
+
+const mapDoodyIdToIndex = (doodyId: string): number => {
+  const lower = doodyId.toLowerCase();
+  if (lower.includes('default') || lower.includes('001')) return 0;
+  if (lower.includes('brush') || lower.includes('002')) return 1;
+  if (lower.includes('happy') || lower.includes('003')) return 2;
+  if (lower.includes('sad') || lower.includes('004')) return 3;
+  if (lower.includes('smile') || lower.includes('common') || lower.includes('005')) return 4;
+  if (lower.includes('salary') || lower.includes('connection') || lower.includes('006')) return 5;
+  if (lower.includes('green') || lower.includes('autonomy') || lower.includes('007')) return 6;
+  return 0;
+};
 
 interface ConnectionScreenProps {
   onBackToHome?: () => void;
@@ -38,6 +52,7 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
   const insets = useSafeAreaInsets();
   const [viewState, setViewState] = useState<'map' | 'catch' | 'success' | 'unlock'>('map');
   const [selectedDoodyIndex, setSelectedDoodyIndex] = useState<number>(0);
+  const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
@@ -126,45 +141,59 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
 
   const fetchInstitutions = async (lat: number, lon: number) => {
     try {
-      const query = `[out:json][timeout:10];(node["name"~"하나은행"](around:2000,${lat},${lon});node["name"~"청년센터"](around:2000,${lat},${lon});node["amenity"="bank"]["name"~"하나"](around:2000,${lat},${lon}););out body;`;
-      const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
-      
-      if (!response.ok) {
-        throw new Error(`Overpass API Error: ${response.status}`);
-      }
-      const data = await response.json();
-      
-      let elements = data.elements || [];
-      if (elements.length === 0) {
-        elements = [
-          { id: 1, lat: lat + 0.005, lon: lon + 0.005, tags: { name: '가상 하나은행' } },
-          { id: 2, lat: lat - 0.003, lon: lon + 0.006, tags: { name: '가상 청년센터' } },
-          { id: 3, lat: lat + 0.002, lon: lon - 0.004, tags: { name: '가상 하나은행 본점' } },
-        ];
-      }
-
-      const mapped = elements.map((el: any) => ({
-        ...el,
-        doodyIndex: Math.floor(Math.random() * DOODY_SVGS.length)
+      const pins = await collectionPinApi.getNearbyPins(lat, lon, 2000);
+      const mapped = pins.map((pin) => ({
+        id: pin.pinId,
+        lat: pin.lat,
+        lon: pin.lng,
+        tags: { name: pin.title || pin.doodyName },
+        doodyIndex: mapDoodyIdToIndex(pin.doodyId),
+        captureAvailable: pin.captureAvailable
       }));
       setInstitutions(mapped);
-
     } catch (e) {
-      console.error('Overpass API error:', e);
+      console.error('Failed to fetch nearby pins from backend:', e);
       setInstitutions([
-        { id: 1, lat: lat + 0.005, lon: lon + 0.005, tags: { name: '가상 하나은행' }, doodyIndex: 0 },
-        { id: 2, lat: lat - 0.003, lon: lon + 0.006, tags: { name: '가상 청년센터' }, doodyIndex: 1 },
-        { id: 3, lat: lat + 0.002, lon: lon - 0.004, tags: { name: '가상 하나은행 본점' }, doodyIndex: 2 },
+        { id: 'mock-1', lat: lat + 0.005, lon: lon + 0.005, tags: { name: '가상 하나은행' }, doodyIndex: 0, captureAvailable: false },
+        { id: 'mock-2', lat: lat - 0.003, lon: lon + 0.006, tags: { name: '가상 청년센터' }, doodyIndex: 1, captureAvailable: true },
+        { id: 'mock-3', lat: lat + 0.002, lon: lon - 0.004, tags: { name: '가상 하나은행 본점' }, doodyIndex: 2, captureAvailable: false },
       ]);
     }
   };
 
-  const handleCatchDoody = (doodyIndex: number) => {
+  const handleCatchDoody = (pinId: string, doodyIndex: number) => {
+    setSelectedPinId(pinId);
     setSelectedDoodyIndex(doodyIndex);
     setViewState('catch');
   };
 
-  const handleCatchSuccess = () => {
+  const handleCatchSuccess = async () => {
+    try {
+      if (selectedPinId && location) {
+        const captureResult = await collectionPinApi.captureDoody(
+          selectedPinId,
+          location.coords.latitude,
+          location.coords.longitude
+        );
+        
+        // Auto-unlock newly caught Doodies in the user collection store
+        if (captureResult.collectedDudy && captureResult.collectedDudy.length > 0) {
+          const { unlockDoody } = useCollectionStore.getState();
+          captureResult.collectedDudy.forEach((dudy) => {
+            if (dudy.id === 'd_rhythm_common' || dudy.axis === 'rhythm') {
+              unlockDoody(4); // SmileDoody
+            } else if (dudy.axis === 'autonomy') {
+              unlockDoody(6); // GreenDoody
+            } else if (dudy.axis === 'connection') {
+              unlockDoody(5); // SalaryDoody
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Failed to capture doody on backend:', e);
+      Alert.alert('포획 실패', '서버와 통신하는 중 오류가 발생했습니다.');
+    }
     setViewState('success');
   };
 
@@ -233,14 +262,13 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
 
           {institutions.map((inst) => {
             const SvgComponent = DOODY_SVGS[inst.doodyIndex];
-            const dist = location ? getDistance(location.coords.latitude, location.coords.longitude, inst.lat, inst.lon) : 0;
-            const isFar = dist > 1000;
+            const isFar = inst.captureAvailable !== undefined ? !inst.captureAvailable : true;
 
             return (
               <Marker
                 key={inst.id}
                 coordinate={{ latitude: inst.lat, longitude: inst.lon }}
-                onPress={isFar ? undefined : () => handleCatchDoody(inst.doodyIndex)}
+                onPress={isFar ? undefined : () => handleCatchDoody(inst.id, inst.doodyIndex)}
                 opacity={isFar ? 0.4 : 1}
               >
                 <View style={tw`items-center`}>

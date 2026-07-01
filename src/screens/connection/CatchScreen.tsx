@@ -37,8 +37,17 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   
+  // State for catch tapping
+  const [tapCount, setTapCount] = React.useState(0);
+  const TARGET_TAPS = 5;
+  
   // Simple floating animation for the Doody
   const floatAnim = useRef(new Animated.Value(0)).current;
+
+  // Catch animations
+  const hitScale = useRef(new Animated.Value(1)).current;
+  const hitRotate = useRef(new Animated.Value(0)).current;
+  const ballScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.loop(
@@ -56,6 +65,79 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
       ])
     ).start();
   }, [floatAnim]);
+
+  const handleTap = () => {
+    const nextCount = tapCount + 1;
+    if (nextCount > TARGET_TAPS) return;
+
+    setTapCount(nextCount);
+
+    // Ball button bounce animation
+    ballScale.setValue(0.85);
+    Animated.spring(ballScale, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+
+    // Doody wiggling & scale-up animation
+    hitScale.setValue(1);
+    hitRotate.setValue(0);
+
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(hitScale, {
+          toValue: 1.25,
+          duration: 80,
+          useNativeDriver: true,
+        }),
+        Animated.spring(hitScale, {
+          toValue: 1,
+          friction: 4,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.timing(hitRotate, {
+          toValue: 1, // tilt right
+          duration: 50,
+          useNativeDriver: true,
+        }),
+        Animated.timing(hitRotate, {
+          toValue: -1, // tilt left
+          duration: 80,
+          useNativeDriver: true,
+        }),
+        Animated.spring(hitRotate, {
+          toValue: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Final tap trigger transition to success
+    if (nextCount === TARGET_TAPS) {
+      setTimeout(() => {
+        // Doody gets caught: shrink and fade out animation
+        Animated.parallel([
+          Animated.timing(hitScale, {
+            toValue: 0,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+          Animated.timing(floatAnim, {
+            toValue: 80,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          onSuccess();
+        });
+      }, 250);
+    }
+  };
 
   const SvgComponent = DOODY_SVGS[doodyIndex];
 
@@ -79,6 +161,11 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
     );
   }
 
+  const interpolatedRotate = hitRotate.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ['-18deg', '18deg'],
+  });
+
   return (
     <View style={tw`flex-1 bg-black`}>
       <StatusBar style="light" translucent backgroundColor="transparent" />
@@ -90,6 +177,20 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
         
         {/* Center Target & Doody */}
         <View style={tw`flex-1 justify-center items-center relative`}>
+          {/* HP / Tap Progress Bar */}
+          <View style={tw`bg-black/50 px-4 py-2 rounded-full mb-6 flex-row items-center border border-white/20 z-20`}>
+            <Text style={tw`text-white text-xs font-bold mr-3`}>두디 잡는 중</Text>
+            <View style={tw`w-28 h-2.5 bg-white/20 rounded-full overflow-hidden`}>
+              <View 
+                style={[
+                  tw`h-full bg-teal-400`, 
+                  { width: `${(tapCount / TARGET_TAPS) * 100}%` }
+                ]} 
+              />
+            </View>
+            <Text style={tw`text-white text-xs font-black ml-3`}>{tapCount}/{TARGET_TAPS}</Text>
+          </View>
+
           {/* Dashed Target Circle */}
           <View style={[
             tw`absolute border-4 border-dashed border-white rounded-full`, 
@@ -97,7 +198,18 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
           ]} />
           
           {/* Animated Doody inside */}
-          <Animated.View style={[tw`w-64 h-64`, { transform: [{ translateY: floatAnim }] }]}>
+          <Animated.View 
+            style={[
+              tw`w-64 h-64`, 
+              { 
+                transform: [
+                  { translateY: floatAnim },
+                  { scale: hitScale },
+                  { rotate: interpolatedRotate }
+                ] 
+              }
+            ]}
+          >
             <Image source={SvgComponent} style={{ width: '100%', height: '100%' }} contentFit="contain" />
           </Animated.View>
         </View>
@@ -111,10 +223,12 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
 
           <TouchableOpacity 
             activeOpacity={0.8}
-            onPress={onSuccess}
-            style={tw`w-28 h-28 items-center justify-center shadow-lg rounded-full mx-4`}
+            onPress={handleTap}
+            style={tw`mx-4`}
           >
-            <BallSvg width="100%" height="100%" />
+            <Animated.View style={[tw`w-28 h-28 items-center justify-center shadow-lg rounded-full`, { transform: [{ scale: ballScale }] }]}>
+              <BallSvg width="100%" height="100%" />
+            </Animated.View>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onGoToMap} style={tw`w-14 h-14 bg-white/80 rounded-2xl items-center justify-center shadow-sm`}>

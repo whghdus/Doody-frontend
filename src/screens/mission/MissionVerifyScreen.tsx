@@ -15,7 +15,7 @@ import DoodySvg from '../../assets/doody/Doody.webp';
 
 interface MissionVerifyScreenProps {
   onCancel: () => void;
-  onVerifyComplete: () => void;
+  onVerifyComplete: (photoUri?: string) => void;
 }
 
 export default function MissionVerifyScreen({
@@ -162,14 +162,13 @@ export default function MissionVerifyScreen({
                 </View>
               </View>
 
-              {/* Confirm upload button */}
               <TouchableOpacity
-                onPress={onVerifyComplete}
+                onPress={() => onVerifyComplete(imageUri || undefined)}
                 activeOpacity={0.8}
                 style={tw`bg-[#008C75] py-4 rounded-[20px] w-full items-center justify-center shadow-md`}
               >
                 <Text style={tw`text-white font-bold text-base`}>
-                  확인하고 사진 업로드 완료하기!
+                  확인하고 업로드 완료하기!
                 </Text>
               </TouchableOpacity>
             </View>

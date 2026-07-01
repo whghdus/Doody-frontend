@@ -7,11 +7,13 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import tw from 'twrnc';
 import DoodySvg from '../../assets/doody/Doody.webp';
 import { COLORS } from '../../constants/theme';
+import { useOnboardingStore } from '../../store/useOnboardingStore';
 
 interface OnboardingHatchProps {
   onFinish: () => void;
@@ -48,7 +50,18 @@ export default function OnboardingHatch({ onFinish }: OnboardingHatchProps) {
         <View style={tw`flex-1 justify-end pb-8`}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={onFinish}
+            onPress={async () => {
+              try {
+                await useOnboardingStore.getState().submitOnboarding();
+                onFinish();
+              } catch (error: any) {
+                console.error('Failed to submit onboarding', error);
+                Alert.alert(
+                  '회원가입 실패',
+                  error.response?.data?.message || '회원가입 중 에러가 발생했습니다.'
+                );
+              }
+            }}
             style={tw`bg-[${COLORS.primary}] py-4 rounded-3xl w-full items-center shadow-lg`}
           >
             <Text style={tw`text-white font-bold text-lg`}>
