@@ -5,27 +5,27 @@ import { View, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import tw from './utils/tailwind';
-import { useOnboardingStore } from './store/useOnboardingStore';
-import Background from './components/common/Background';
+import tw from '@/shared/lib/tailwind';
+import { useOnboardingStore } from '@/entities/useOnboardingStore';
+import Background from '@/shared/ui/Background';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Auth screens
-import LandingScreen from './screens/auth/LandingScreen';
-import SignupScreen from './screens/auth/SignupScreen';
-import LoginScreen from './screens/auth/LoginScreen';
+import LandingScreen from '@/pages/auth/LandingScreen';
+import SignupScreen from '@/pages/auth/SignupScreen';
+import LoginScreen from '@/pages/auth/LoginScreen';
 
 // Onboarding screens
-import OnboardingScreen1 from './screens/onboarding/OnboardingScreen1';
-import OnboardingGoal from './screens/onboarding/OnboardingGoal';
-import OnboardingDuration from './screens/onboarding/OnboardingDuration';
-import OnboardingQuestions from './screens/onboarding/OnboardingQuestions';
-import OnboardingMyData from './screens/onboarding/OnboardingMyData';
-import OnboardingSummary from './screens/onboarding/OnboardingSummary';
-import OnboardingHatch from './screens/onboarding/OnboardingHatch';
+import OnboardingScreen1 from '@/pages/onboarding/OnboardingScreen1';
+import OnboardingGoal from '@/pages/onboarding/OnboardingGoal';
+import OnboardingDuration from '@/pages/onboarding/OnboardingDuration';
+import OnboardingQuestions from '@/pages/onboarding/OnboardingQuestions';
+import OnboardingMyData from '@/pages/onboarding/OnboardingMyData';
+import OnboardingSummary from '@/pages/onboarding/OnboardingSummary';
+import OnboardingHatch from '@/pages/onboarding/OnboardingHatch';
 
-// Home Screen
-import HomeScreen from './screens/home/HomeScreen';
+// Main Tab Navigator
+import BottomTabNavigator from './app/navigation/BottomTabNavigator';
 
 const Stack = createNativeStackNavigator();
 
@@ -206,12 +206,7 @@ export default function App() {
 
             <Stack.Screen name="Home" options={{ animation: 'fade' }}>
               {(props: any) => (
-                <HomeScreen
-                  onRestartOnboarding={() => {
-                    useOnboardingStore.getState().setSelectedCategory(null);
-                    props.navigation.reset({ index: 0, routes: [{ name: 'Landing' }] });
-                  }}
-                />
+                <BottomTabNavigator />
               )}
             </Stack.Screen>
           </Stack.Navigator>
