@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import DoodySvg from '../../assets/doody/Doody.webp';
 
 interface MissionDetailScreenProps {
@@ -31,7 +31,7 @@ export default function MissionDetailScreen({
           {/* Header (Left-aligned text next to back arrow) */}
           <View style={tw`flex-row justify-between items-center mb-6`}>
             <View style={tw`flex-row items-center`}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={onBack}
                 style={tw`w-10 h-10 rounded-full bg-gray-50 items-center justify-center mr-3`}
               >
@@ -69,7 +69,7 @@ export default function MissionDetailScreen({
           <View style={tw`bg-white border border-gray-100 rounded-[24px] p-5 shadow-sm mb-4`}>
             <Text style={tw`text-gray-400 text-xs font-bold mb-2`}>추천 이유</Text>
             <Text style={tw`text-gray-800 text-sm leading-relaxed font-semibold`}>
-              0원도 중요한 기록이에요. 돈을 쓰지 않은 날을 남기면, 내 소비를 부담 없이 바라보는 연습이 돼요.
+              0원도 중요한 기록이야. 돈을 쓰지 않은 날을 남기면, 내 소비를 부담 없이 바라보는 연습이 돼.
             </Text>
           </View>
 
@@ -80,7 +80,7 @@ export default function MissionDetailScreen({
               {[
                 '오늘 돈을 쓴 게 있었는지만 떠올려요',
                 "없었다면 '0원 소비'로 남겨요",
-                '완료하면 자립 기록과 하나머니가 쌓여요',
+                '완료하면 자립 기록과 금 RWA 토큰이 쌓여',
               ].map((step, idx) => (
                 <View key={idx} style={tw`flex-row items-start`}>
                   <View style={tw`w-5 h-5 rounded-full bg-[#008C75] items-center justify-center mr-3 mt-0.5`}>

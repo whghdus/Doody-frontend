@@ -6,7 +6,7 @@ import {
   Text,
   TouchableOpacity,
 } from 'react-native';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { useOnboardingStore } from '../../store/useOnboardingStore';
 
 interface IndependenceRoadmapModalProps {

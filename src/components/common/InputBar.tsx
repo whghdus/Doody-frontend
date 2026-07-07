@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, TextInputProps } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { COLORS } from '../../constants/theme';
 
 interface InputBarProps {

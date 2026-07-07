@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { View, Text } from 'react-native';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { COLORS } from '../../constants/theme';
 
 interface StepIndicatorProps {

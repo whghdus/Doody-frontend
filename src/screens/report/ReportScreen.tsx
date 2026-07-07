@@ -1,9 +1,10 @@
 import { Image } from 'expo-image';
 // src/screens/report/ReportScreen.tsx
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle, Line } from 'react-native-svg';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { COLORS } from '../../constants/theme';
 
 import DoodySvg from '../../assets/doody/Doody.webp';
@@ -11,11 +12,14 @@ import BrushDoodySvg from '../../assets/doody/brushDoody.webp';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
 import SadDoodySvg from '../../assets/doody/sadDoody.webp';
 import SmileDoodySvg from '../../assets/doody/smileDoody.webp';
+import ExplorationDoodySvg from '../../assets/doody/explorationDoody.webp';
+import SalaryDoodySvg from '../../assets/doody/salaryDoodt.webp';
+import GreenDoodySvg from '../../assets/doody/greenDoody.webp';
 import SimpleBackButton from '../../components/common/SimpleBackButton';
 import { useCollectionStore } from '../../store/useCollectionStore';
 import { reportApi, RecoveryReportResponse } from '../../api/report';
 
-const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg];
+const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg, ExplorationDoodySvg, SalaryDoodySvg, GreenDoodySvg];
 
 interface ReportScreenProps {
   onBack: () => void;
@@ -44,6 +48,59 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
       setLoading(true);
       try {
         const data = await reportApi.getRecoveryReport(timeRange);
+        
+        try {
+          const mockQuiz = await AsyncStorage.getItem('mock_quiz_completed');
+          if (mockQuiz === 'true') {
+            const rhythmGroup = data.recordGroups.find(g => g.axis === 'RHYTHM');
+            
+            let mockDateStr = new Date().toISOString();
+            if (rhythmGroup && rhythmGroup.records && rhythmGroup.records.length > 0) {
+              const firstDate = rhythmGroup.records[0].recordedAt;
+              if (firstDate) {
+                const dateObj = new Date(firstDate);
+                dateObj.setHours(17, 19, 0, 0);
+                mockDateStr = dateObj.toISOString();
+              }
+            } else {
+              const dateObj = new Date();
+              dateObj.setHours(17, 19, 0, 0);
+              mockDateStr = dateObj.toISOString();
+            }
+
+            const mockRecord = {
+              recordId: Date.now(),
+              recordedAt: mockDateStr,
+              title: '두디의 깜짝 퀴즈 정답 맞추기',
+              reward: 50
+            };
+
+            if (rhythmGroup) {
+              rhythmGroup.records.unshift(mockRecord);
+              rhythmGroup.recordCount = (rhythmGroup.recordCount || 0) + 1;
+            } else {
+              data.recordGroups.push({
+                axis: 'RHYTHM',
+                recordCount: 1,
+                records: [mockRecord]
+              });
+            }
+
+            if (!data.axisSummaries) data.axisSummaries = [];
+            const rhythmSummary = data.axisSummaries.find(s => s.axis === 'RHYTHM');
+            if (rhythmSummary) {
+              rhythmSummary.recordCount = (rhythmSummary.recordCount || 0) + 1;
+            } else {
+              data.axisSummaries.push({ axis: 'RHYTHM', recordCount: 1 });
+            }
+            if (!data.summary) data.summary = { totalRecordCount: 0, recordedDayCount: 0, totalPoint: 0 };
+            data.summary.totalPoint = (data.summary.totalPoint || 0) + 50;
+            data.summary.totalRecordCount = (data.summary.totalRecordCount || 0) + 1;
+          }
+        } catch (e) {
+          console.warn('Failed to inject mock quiz record', e);
+        }
+
         setReportData(data);
       } catch (err) {
         console.error('Failed to fetch recovery report:', err);
@@ -61,15 +118,26 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
     'CONNECTION': 'connection'
   };
 
-  const timelineData = reportData?.recordGroups.flatMap(group => 
-    group.records.map((record: any) => ({
-      category: axisMap[group.axis] || 'rhythm',
-      day: record.createdAt ? new Date(record.createdAt).toLocaleDateString('ko-KR', { weekday: 'short' }) : '오늘',
-      time: record.createdAt ? new Date(record.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '00:00',
-      title: record.title || '기록',
-      points: `+${record.points || 0}P`
-    }))
-  ) || [];
+  const timelineData = reportData?.recordGroups.flatMap(group => {
+    return group.records.map((record: any) => {
+      // Handle nested reward objects or various point field names
+      let rewardAmt = 0;
+      if (typeof record.reward === 'number') {
+        rewardAmt = record.reward;
+      } else if (record.reward && typeof record.reward.hanaMoney === 'number') {
+        rewardAmt = record.reward.hanaMoney;
+      } else {
+        rewardAmt = record.point ?? record.points ?? record.pointsEarned ?? record.amount ?? record.hanaMoney ?? record.rewardAmount ?? record.acquiredPoint ?? 0;
+      }
+      return {
+        category: axisMap[group.axis] || 'rhythm',
+        day: record.recordedAt ? new Date(record.recordedAt).toLocaleDateString('ko-KR', { weekday: 'short' }) : '오늘',
+        time: record.recordedAt ? new Date(record.recordedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '00:00',
+        title: record.title || '기록',
+        points: `+${rewardAmt}`
+      };
+    })
+  }) || [];
 
   const filteredData = timelineData.filter(item => item.category === categoryTab);
 
@@ -114,7 +182,7 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
             </View>
             <View style={tw`bg-[#EEF7F5] rounded-xl p-4`}>
               <Text style={tw`text-gray-700 text-xs leading-relaxed font-semibold`}>
-                {reportData?.activitySummary?.summary || '이번 달은 더 많은 활동을 기록해 보세요!'}
+                {reportData?.activitySummary?.summary || '이번 달은 더 많은 활동을 기록해 봐!'}
               </Text>
             </View>
           </View>
@@ -142,9 +210,9 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
           
           {/* Points Row */}
           <View style={tw`bg-[#EEF7F5] rounded-xl p-3 flex-row justify-between items-center`}>
-            <Text style={tw`text-[${COLORS.primary}] text-xs font-bold`}>모의 적립 포인트</Text>
+            <Text style={tw`text-[${COLORS.primary}] text-xs font-bold`}>적립 금 RWA 토큰</Text>
             <Text style={tw`text-[${COLORS.primary}] text-base font-black`}>
-              +{reportData?.summary?.totalPoint?.toLocaleString() || 0} P
+              +{reportData?.summary?.totalPoint?.toLocaleString() || 0}
             </Text>
           </View>
         </View>
@@ -194,11 +262,11 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
                     
                     {/* Content Card */}
                     <View style={tw`flex-1 bg-white rounded-2xl p-4 shadow-md flex-row justify-between items-center`}>
-                      <View>
+                      <View style={tw`flex-1 pr-3`}>
                         <Text style={tw`text-gray-400 text-[10px] font-bold mb-1`}>{item.day} {item.time}</Text>
-                        <Text style={tw`text-gray-900 text-sm font-bold`}>{item.title}</Text>
+                        <Text style={tw`text-gray-900 text-sm font-bold`} numberOfLines={2}>{item.title}</Text>
                       </View>
-                      <View style={tw`bg-[#EEF7F5] px-2 py-1 rounded-full`}>
+                      <View style={tw`bg-[#EEF7F5] px-2 py-1 rounded-full shrink-0`}>
                         <Text style={tw`text-[${COLORS.primary}] text-[10px] font-bold`}>{item.points}</Text>
                       </View>
                     </View>
@@ -207,7 +275,7 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
               })}
               
               {filteredData.length === 0 && (
-                <Text style={tw`text-gray-400 text-center py-4`}>기록이 없습니다.</Text>
+                <Text style={tw`text-gray-400 text-center py-4`}>기록이 없어.</Text>
               )}
             </View>
           )}

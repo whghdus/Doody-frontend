@@ -50,7 +50,7 @@ export const checkInApi = {
       return {
         success: response.data.isSuccess ?? true,
         pointsEarned: data?.reward?.hanaMoney ?? 20,
-        greeting: data?.greeting || 'Today is checked in.',
+        greeting: data?.greeting || undefined,
         collectedDudy: data?.collectedDudy || [],
       };
     } catch (error) {
@@ -58,7 +58,7 @@ export const checkInApi = {
       return {
         success: true,
         pointsEarned: 20,
-        greeting: 'Today is checked in.',
+        greeting: undefined,
         collectedDudy: [],
       };
     }

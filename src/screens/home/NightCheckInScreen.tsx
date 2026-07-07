@@ -14,7 +14,7 @@ import {
   Dimensions,
 } from 'react-native';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { Feather } from '@expo/vector-icons';
 import CloseButton from '../../components/common/CloseButton';
 import Background from '../../components/common/Background';
@@ -60,7 +60,7 @@ export default function NightCheckInScreen({ onClose }: NightCheckInScreenProps)
               <Text style={tw`text-white text-xs font-bold`}>🌱 두디</Text>
             </View>
             <Text style={tw`text-gray-900 text-lg font-bold mt-2 leading-7`}>
-              오늘 하루를 한마디로 남겨볼까요?{'\n'}괜찮아도, 별로여도 그대로 적어도 돼요.
+              오늘 하루를 한마디로 남겨볼까요?{'\n'}괜찮아도, 별로여도 그대로 적어도 돼.
             </Text>
             {/* Bubble Tail */}
             <View style={[
@@ -111,7 +111,7 @@ export default function NightCheckInScreen({ onClose }: NightCheckInScreenProps)
                 <View style={tw`bg-white rounded-full flex-row items-center px-2 py-1 shadow-md`}>
                   <TextInput
                     style={tw`flex-1 h-12 px-4 text-base text-gray-800`}
-                    placeholder="두디에게 한마디를 건네보세요..."
+                    placeholder="두디에게 한마디를 건네봐..."
                     placeholderTextColor="#9CA3AF"
                     value={message}
                     onChangeText={setMessage}

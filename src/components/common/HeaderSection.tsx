@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 
 interface HeaderSectionProps {
   label: string;

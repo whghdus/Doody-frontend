@@ -7,8 +7,9 @@ import {
   Text,
   TouchableOpacity,
 } from 'react-native';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
+import PointSvg from '../../assets/icons/point.svg';
 
 interface MorningSuccessModalProps {
   visible: boolean;
@@ -18,10 +19,10 @@ interface MorningSuccessModalProps {
   points?: number;
 }
 
-export default function MorningSuccessModal({ 
-  visible, 
-  onConfirm, 
-  title = "오늘 하루도 화이팅!", 
+export default function MorningSuccessModal({
+  visible,
+  onConfirm,
+  title = "오늘 하루도 화이팅!",
   description = "와준 게 오늘 제일 큰 일이야.\n그것만으로 오늘 첫 단추는 끼웠어.",
   points = 20
 }: MorningSuccessModalProps) {
@@ -38,7 +39,7 @@ export default function MorningSuccessModal({
           <View style={tw`w-32 h-32 mb-6`}>
             <Image source={HappyDoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
           </View>
-          
+
           <Text style={tw`text-gray-900 text-2xl font-black mb-2 text-center`}>
             {title}
           </Text>
@@ -48,10 +49,10 @@ export default function MorningSuccessModal({
 
           {/* Point Badge */}
           <View style={tw`bg-[#FFF9E6] px-5 py-2 rounded-full mb-8 flex-row items-center border border-[#F5B800]/20`}>
-            <View style={tw`w-5 h-5 rounded-full bg-[#F5B800] items-center justify-center mr-2 shadow-sm`}>
-              <Text style={tw`text-white font-black text-[10px]`}>W</Text>
+            <View style={tw`mr-2 shadow-sm`}>
+              <PointSvg width={20} height={20} />
             </View>
-            <Text style={tw`text-[#D48C00] font-black text-sm`}>하나머니 +{points}</Text>
+            <Text style={tw`text-[#D48C00] font-black text-sm`}>금 RWA 토큰 +{points}</Text>
           </View>
 
           {/* Confirm Button */}

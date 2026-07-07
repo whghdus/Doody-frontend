@@ -6,7 +6,8 @@ import {
   Text,
   TouchableOpacity,
 } from 'react-native';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
+import PointSvg from '../../assets/icons/point.svg';
 
 interface NightSuccessModalProps {
   visible: boolean;
@@ -24,22 +25,22 @@ export default function NightSuccessModal({ visible, onGoHome, onNextMission }: 
     >
       <View style={tw`flex-1 bg-black/40 justify-center items-center px-6 py-8`}>
         <View style={tw`w-full bg-white rounded-[32px] px-6 pt-10 pb-8 items-center shadow-2xl border border-gray-100 relative`}>
-          
+
           <Text style={tw`text-[#008C75] text-2xl font-black mb-2 text-center`}>
             미션 완료!
           </Text>
           <Text style={tw`text-[#8C9C98] text-sm font-bold text-center mb-6`}>
-            오늘 하루 기록하기를 해냈어요
+            오늘 하루 기록하기를 해냈어
           </Text>
 
           {/* Points Card */}
           <View style={tw`w-full bg-[#FFF9E6] rounded-2xl p-4 flex-row items-center mb-3`}>
-            <View style={tw`w-8 h-8 rounded-full bg-[#F5B800] items-center justify-center mr-4 shadow-sm`}>
-              <Text style={tw`text-white font-black text-sm`}>P</Text>
+            <View style={tw`mr-4 shadow-sm`}>
+              <PointSvg width={32} height={32} />
             </View>
             <View>
-              <Text style={tw`text-[#D48C00] font-black text-xl mb-0.5`}>+30P</Text>
-              <Text style={tw`text-[#D48C00] font-bold text-xs`}>하나머니 적립 완료</Text>
+              <Text style={tw`text-[#D48C00] font-black text-xl mb-0.5`}>+30</Text>
+              <Text style={tw`text-[#D48C00] font-bold text-xs`}>금 RWA 토큰 적립 완료</Text>
             </View>
           </View>
 
@@ -48,7 +49,7 @@ export default function NightSuccessModal({ visible, onGoHome, onNextMission }: 
             <Text style={tw`text-xl mr-4`}>⭐</Text>
             <View>
               <Text style={tw`text-[#008C75] font-black text-base mb-0.5`}>이번 달 기록 14개째!</Text>
-              <Text style={tw`text-[#8C9C98] font-bold text-xs`}>내일도 함께해요</Text>
+              <Text style={tw`text-[#8C9C98] font-bold text-xs`}>내일도 함께해</Text>
             </View>
           </View>
 

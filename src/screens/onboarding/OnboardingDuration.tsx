@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import BackButton from '../../components/common/BackButton';
 import LaterButton from '../../components/common/LaterButton';
 import StepIndicator from '../../components/common/StepIndicator';
@@ -20,12 +20,12 @@ import { COLORS } from '../../constants/theme';
 
 // goal_choice → recommended_period 결정론적 카탈로그
 const PERIOD_CATALOG: Record<string, { id: string; label: string; description: string }> = {
-  g1: { id: '1w',  label: '1주',   description: '작은 루틴을 만들기엔 1주가 딱 맞아요.\n부담 없이 한 걸음씩 시작해봐요.' },
-  g2: { id: '1m',  label: '1개월', description: '돈과 소비를 천천히 마주하려면\n1개월이 가장 안전한 호흡이에요.' },
-  g3: { id: '3m',  label: '3개월', description: '취업·상담 지원 탐색엔 3개월이 필요해요.\n단단히 준비할 수 있게 함께 걸어요.' },
+  g1: { id: '1w', label: '1주', description: '작은 루틴을 만들기엔 1주가 딱 맞아.\n부담 없이 한 걸음씩 시작해봐.' },
+  g2: { id: '1m', label: '1개월', description: '돈과 소비를 천천히 마주하려면\n1개월이 가장 안전한 호흡이야.' },
+  g3: { id: '3m', label: '3개월', description: '취업·상담 지원 탐색엔 3개월이 필요해.\n단단히 준비할 수 있게 함께 걸어.' },
 };
 
-const DEFAULT_PERIOD = { id: '1w', label: '1주', description: '지금 목표에 딱 맞는 호흡으로 시작해봐요.' };
+const DEFAULT_PERIOD = { id: '1w', label: '1주', description: '지금 목표에 딱 맞는 호흡으로 시작해봐.' };
 
 interface OnboardingDurationProps {
   goalId: string;
@@ -57,19 +57,20 @@ export default function OnboardingDuration({ goalId, onNext, onBack, onLater }: 
         </View>
 
         {/* Header */}
-        <View style={tw`h-24 justify-start`}>
-          <HeaderSection
-            label=""
-            title="두디가 이 호흡을 골라줬어요"
-            subtitle={`지금 목표와 상태를 보고 정했어요.\n언제든 바꿀 수 있어요.`}
-          />
+        <View style={tw`justify-start mt-8 mb-10`}>
+          <Text style={tw`text-2xl font-bold text-gray-900 leading-tight mb-2`}>
+            두디가 이 호흡을 골라줬어
+          </Text>
+          <Text style={tw`text-gray-500 text-sm leading-relaxed`}>
+            지금 목표와 상태를 보고 정했어.{'\n'}언제든 바꿀 수 있어.
+          </Text>
         </View>
 
         {/* Period Display Card — 선택 UI 없음, 표시만 */}
-        <View style={tw`bg-white rounded-3xl p-6 shadow-md border border-gray-100 w-full mt-4 items-center`}>
+        <View style={tw`bg-white rounded-2xl py-4 px-4 shadow-sm border border-gray-100 w-[90%] self-center items-center`}>
           {/* Period Badge */}
-          <View style={tw`bg-[${COLORS.primary}] px-8 py-3 rounded-2xl mb-4`}>
-            <Text style={tw`text-white text-2xl font-black tracking-wide`}>
+          <View style={tw`bg-[${COLORS.primary}] px-6 py-1.5 rounded-xl mb-2.5`}>
+            <Text style={tw`text-white text-xl font-black tracking-wide`}>
               {period.label}
             </Text>
           </View>

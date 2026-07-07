@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import BackgroundSvg from '../../assets/backgrounds/background.svg';
 import DarkBackgroundSvg from '../../assets/backgrounds/darkbackground.svg';
 

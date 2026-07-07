@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { Feather } from '@expo/vector-icons';
 
 interface IndependenceSwapModalProps {
@@ -49,7 +49,7 @@ export default function IndependenceSwapModal({
               </View>
             </TouchableOpacity>
             <Text style={tw`text-[#008C75] text-[17px] font-black`}>
-              조금 더 작은 걸음으로 바꿔볼게요
+              조금 더 작은 걸음으로 바꿔볼게
             </Text>
           </View>
 
@@ -58,7 +58,7 @@ export default function IndependenceSwapModal({
             {/* Encouragement Box */}
             <View style={tw`bg-[#EEF7F5] rounded-[20px] py-5 px-4 items-center mb-6`}>
               <Text style={tw`text-[#008C75] font-bold text-sm text-center leading-relaxed`}>
-                괜찮아요. 지금 가능한 만큼만 해도 충분해요.
+                괜찮아. 지금 가능한 만큼만 해도 충분해.
               </Text>
             </View>
 
@@ -73,7 +73,7 @@ export default function IndependenceSwapModal({
             <View style={tw`bg-[#008C75] rounded-[24px] p-6 mb-6 shadow-sm`}>
               {/* Points Badge */}
               <View style={tw`bg-white/20 px-3 py-1 rounded-full self-start mb-3`}>
-                <Text style={tw`text-white text-xs font-bold`}>하나머니 +50</Text>
+                <Text style={tw`text-white text-xs font-bold`}>금 RWA 토큰 +50</Text>
               </View>
               {/* Mission Title */}
               <Text style={tw`text-white text-xl font-bold leading-normal`}>

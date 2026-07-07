@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import LaterButton from '../../components/common/LaterButton';
 import StepIndicator from '../../components/common/StepIndicator';
 import HeaderSection from '../../components/common/HeaderSection';
@@ -29,20 +29,20 @@ export default function OnboardingGoal({ onNext, onLater }: OnboardingGoalProps)
     {
       id: 'g1',
       num: '01',
-      title: '무너진 생활 리듬을 다시 잡고 싶어요',
-      subtitle: '작은 루틴부터 다시 시작하기',
+      title: '나만의 속도로 차근차근 홀로서고 싶어요',
+      subtitle: '스스로 소비와 예산을 관리하며 단단한 내일 준비하기',
     },
     {
       id: 'g2',
       num: '02',
-      title: '돈과 소비를 피하지 않고 싶어요',
-      subtitle: '통장, 소비, 예산을 천천히 마주하기',
+      title: '홀로서기와 함께 기대는 법도 배우고 싶어요',
+      subtitle: '스스로 할 수 있는 건 해보고, 필요한 도움은 받아보기',
     },
     {
       id: 'g3',
       num: '03',
-      title: '취업·상담 지원을 다시 알아보고 싶어요',
-      subtitle: '청년센터와 금융교육을 작은 단계로 확인하기',
+      title: '나에게 필요한 도움과 지원을 알아보고 싶어요',
+      subtitle: '상담, 취업, 청년 지원 등 나와 세상을 이어줄 연결고리 찾기',
     },
   ];
 
@@ -75,7 +75,7 @@ export default function OnboardingGoal({ onNext, onLater }: OnboardingGoalProps)
           <HeaderSection
             label=""
             title="두디와 어디까지 가보고 싶나요?"
-            subtitle={`고른 목표에 맞춰, 오늘의 작은 미션을 준비할게요.\n나중에 언제든 바꿀 수 있어요.`}
+            subtitle={`고른 목표에 맞춰, 오늘의 작은 미션을 준비할게.\n나중에 언제든 바꿀 수 있어.`}
           />
         </View>
 

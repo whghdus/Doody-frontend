@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import Background from '../../components/common/Background';
 import { COLORS } from '../../constants/theme';
 import DoodyLogo from '../../assets/logos/doodyLogo.png';
@@ -32,11 +32,11 @@ export default function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
 
   const handleLogin = async () => {
     if (!nickname.trim()) {
-      Alert.alert('알림', '닉네임을 입력해주세요.');
+      Alert.alert('알림', '닉네임을 입력해줘.');
       return;
     }
     if (!email.trim() || !email.includes('@')) {
-      Alert.alert('알림', '올바른 이메일 주소를 입력해주세요.');
+      Alert.alert('알림', '올바른 이메일 주소를 입력해줘.');
       return;
     }
 
@@ -54,7 +54,7 @@ export default function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
       console.error('Failed to log in', error);
       Alert.alert(
         '오류',
-        error.response?.data?.message || '로그인 처리 중 문제가 발생했습니다.'
+        error.response?.data?.message || '로그인 처리 중 문제가 발생했어.'
       );
     }
   };
@@ -75,10 +75,10 @@ export default function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
         >
           <View style={tw`mb-12 px-2 pt-8`}>
               <Text style={tw`text-gray-900 text-3xl font-black mb-3`}>
-                다시 오셨군요!{'\n'}이메일로 로그인해주세요.
+                다시 왔구나!{'\n'}이메일로 로그인해줘.
               </Text>
               <Text style={tw`text-gray-500 text-sm font-bold`}>
-                등록하신 이메일을 입력하면 바로 시작할 수 있어요.
+                등록하신 이메일을 입력하면 바로 시작할 수 있어.
               </Text>
             </View>
 

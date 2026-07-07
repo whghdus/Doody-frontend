@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Platform,
   Modal,
+  Linking,
 } from 'react-native';
 import tw from 'twrnc';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -53,41 +54,28 @@ export default function NextStageScreen({ onClose, stageType = 'connection', onG
   const DoodySvg = isConnection ? SalaryDoodySvg : HappyDoodySvg;
 
   const handlePrimaryPress = async () => {
-    if (isConnection) {
-      try {
-        await hanaFinanceApi.unlockHanaFinance('CONNECTION');
-        // Optionally refresh collection
-        await fetchUnlockedDoodies();
-      } catch (err) {
-        console.error('Failed to unlock connection stage', err);
-      }
-      if (onGoToCollection) {
-        onGoToCollection();
-      } else {
-        onGoToStage?.();
-      }
-      onClose();
-    } else {
-      // For independence, open Screen 2 (Benefit Modal)
-      setShowBenefitModal(true);
-    }
+    setShowBenefitModal(true);
   };
 
   const handleModalAction = async (claim: boolean) => {
     setShowBenefitModal(false);
     if (claim) {
       try {
-        await hanaFinanceApi.unlockHanaFinance('AUTONOMY');
+        await hanaFinanceApi.unlockHanaFinance(isConnection ? 'CONNECTION' : 'AUTONOMY');
         // Optionally refresh collection
         await fetchUnlockedDoodies();
       } catch (err) {
-        console.error('Failed to unlock autonomy stage', err);
+        console.error('Failed to unlock stage', err);
       }
-      if (onGoToCollection) {
-        onGoToCollection();
-      } else {
-        onGoToStage?.();
-      }
+      
+      // Route to correct URL based on stage type
+      const url = isConnection 
+        ? 'https://www.hanapoweron.com/' 
+        : 'https://www.hanaw.com/main/main/index.cmd';
+        
+      Linking.openURL(url).catch(err => {
+        console.error("Failed to open URL", err);
+      });
     }
     onClose();
   };
@@ -151,7 +139,7 @@ export default function NextStageScreen({ onClose, stageType = 'connection', onG
         </View>
       </Background>
 
-      {/* Screen 2: Green Doody Autonomy Benefit Modal */}
+      {/* Screen 2: Benefit Modal */}
       <Modal
         visible={showBenefitModal}
         transparent={true}
@@ -162,18 +150,18 @@ export default function NextStageScreen({ onClose, stageType = 'connection', onG
           <View style={tw`w-full bg-white rounded-[32px] p-6 items-center shadow-2xl`}>
             {/* Modal Title */}
             <Text style={tw`text-[#008C75] text-2xl font-black text-center mb-4`}>
-              하나 두디 획득!
+              {isConnection ? '직장 두디 획득!' : '하나 두디 획득!'}
             </Text>
 
-            {/* Green Doody Illustration */}
+            {/* Doody Illustration */}
             <View style={tw`w-48 h-48 justify-center items-center mb-4`}>
-              <Image source={GreenDoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+              <Image source={isConnection ? SalaryDoodySvg : GreenDoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
             </View>
 
             {/* Inner Info Container */}
             <View style={tw`bg-[#EEF7F5] rounded-2xl p-4 w-full items-center mb-6`}>
               <Text style={tw`text-[#008C75] font-black text-sm mb-2.5 text-center`}>
-                🌱 하나 증권 첫 시드
+                {isConnection ? '🌱 하나 파워온 혜택' : '🌱 하나 증권 첫 시드'}
               </Text>
               
               {/* Seed Amount Pill */}
@@ -182,12 +170,12 @@ export default function NextStageScreen({ onClose, stageType = 'connection', onG
                   <Text style={tw`text-white text-[10px] font-black`}>₩</Text>
                 </View>
                 <Text style={tw`text-[#7A5A00] text-xs font-black`}>
-                  투자 연습용 시드 100,000원
+                  {isConnection ? '취업/창업 지원금 보러가기' : '투자 연습용 시드 100,000원'}
                 </Text>
               </View>
 
               <Text style={tw`text-[#008C75] text-[11px] font-bold text-center leading-relaxed`}>
-                언젠가 네가 첫 거래를 해보는 날, 이 돈은 진짜 너의 돈이 될거야!
+                {isConnection ? '청년을 위한 다양한 지원 프로그램 혜택을 알아봐!' : '언젠가 네가 첫 거래를 해보는 날, 이 돈은 진짜 너의 돈이 될거야!'}
               </Text>
             </View>
 
@@ -215,7 +203,7 @@ export default function NextStageScreen({ onClose, stageType = 'connection', onG
 
             {/* Modal Footer Description */}
             <Text style={tw`text-gray-400 text-[10px] text-center`}>
-              받으려면 하나증권이랑 연결돼. 안 받아도 두디는 옆에 있어!
+              {isConnection ? '자세한 혜택은 하나 파워온 홈페이지에서 확인할 수 있어!' : '받으려면 하나증권이랑 연결돼. 안 받아도 두디는 옆에 있어!'}
             </Text>
           </View>
         </View>

@@ -10,6 +10,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import tw from 'twrnc';
 import SimpleBackButton from '../common/SimpleBackButton';
+import { formatLongTitle } from '../../utils/textUtils';
 
 interface MissionDetails {
   recommendation: string;
@@ -20,61 +21,61 @@ interface MissionDetails {
 
 const missionDataMap: Record<string, MissionDetails> = {
   '0원 소비 기록하기': {
-    recommendation: '0원도 중요한 기록이에요. 돈을 쓰지 않은 날을 남기면, 내 소비를 부담 없이 바라보는 연습이 돼요.',
+    recommendation: '0원도 중요한 기록이야. 돈을 쓰지 않은 날을 남기면, 내 소비를 부담 없이 바라보는 연습이 돼.',
     steps: [
       '오늘 돈을 쓴 게 있었는지 떠올려요',
       "없었다면 '0원 소비'로 남겨요",
-      '완료하면 자립 기록과 하나머니가 쌓여요',
+      '완료하면 자립 기록과 하나머니가 쌓여',
     ],
     tags: ['일상', '소비', '매일'],
     badge: '격일',
   },
   '잔액 한 번만 보고 닫기': {
-    recommendation: '돈을 마주하는 가장 첫걸음은 현재 잔액을 확인하는 것입니다. 작은 숫자를 보는 연습부터 시작해봐요.',
+    recommendation: '돈을 마주하는 가장 첫걸음은 현재 잔액을 확인하는 것이야. 작은 숫자를 보는 연습부터 시작해봐.',
     steps: [
       '주거래 은행 앱을 열고 계좌에 접속해요',
-      '계좌 잔액 숫자를 눈으로 1초간 바라봅니다',
-      '앱을 끄고 홀가분한 마음으로 오늘 미션을 마쳐요',
+      '계좌 잔액 숫자를 눈으로 1초간 바라봐',
+      '앱을 끄고 홀가분한 마음으로 오늘 미션을 마쳐',
     ],
     tags: ['일상', '소비', '쉬움'],
     badge: '매일',
   },
   '오늘 돈 쓴 게 있었는지 떠올리기': {
-    recommendation: '하루 동안의 소비 흐름을 가볍게 인지하는 것은 건강한 소비 습관의 기초가 됩니다.',
+    recommendation: '하루 동안의 소비 흐름을 가볍게 인지하는 것은 건강한 소비 습관의 기초가 돼.',
     steps: [
       '오늘 구매했던 영수증이나 결제 내역을 떠올려요',
       '가장 기억에 남는 소비를 하나 골라요',
-      '가계부나 메모장에 간단히 기록해요',
+      '가계부나 메모장에 간단히 기록해',
     ],
     tags: ['일상', '소비', '보통'],
     badge: '매일',
   },
   '한 달 고정 지출 파악하기': {
-    recommendation: '매달 나가는 고정 비용을 정리해두면 소비 계획을 세울 때 불안감이 크게 줄어듭니다.',
+    recommendation: '매달 나가는 고정 비용을 정리해두면 소비 계획을 세울 때 불안감이 크게 줄어들어.',
     steps: [
       '월세, 통신비, 구독료 등 고정 지출 목록을 나열해요',
       '각 항목의 출금일과 금액을 메모해요',
-      '전체 합계를 구해 한 달 고정 비용을 확인해요',
+      '전체 합계를 구해 한 달 고정 비용을 확인해',
     ],
     tags: ['일상', '소비', '도전'],
     badge: '격일',
   },
   '동네 5분만 걸어보기': {
-    recommendation: '밖으로 나가 신선한 공기를 마시고 가볍게 걸으며 응어리진 마음을 환기시키는 미션입니다. 부담 갖지 말고 딱 5분만 다녀와보세요!',
+    recommendation: '밖으로 나가 신선한 공기를 마시고 가볍게 걸으며 응어리진 마음을 환기시키는 미션이야. 부담 갖지 말고 딱 5분만 다녀와봐!',
     steps: [
-      '외출복으로 갈아입고 편안한 운동화를 신어요',
-      '집 주변을 가볍게 5분간 목적지 없이 산책합니다',
-      '돌아와서 물을 한 잔 마시며 스스로에게 칭찬해줘요',
+      '외출복으로 갈아입고 편안한 운동화를 신어',
+      '집 주변을 가볍게 5분간 목적지 없이 산책해',
+      '돌아와서 물을 한 잔 마시며 스스로에게 칭찬해줘',
     ],
     tags: ['일상', '산책', '매일'],
     badge: '매일',
   },
   '오늘 한 번, 커튼만 열어보기': {
-    recommendation: '방 안에 햇빛을 들이는 것은 하루의 에너지를 깨우고 우울감을 완화하는 데 큰 도움이 됩니다.',
+    recommendation: '방 안에 햇빛을 들이는 것은 하루의 에너지를 깨우고 우울감을 완화하는 데 큰 도움이 돼.',
     steps: [
-      '아침에 일어나 창가로 가볍게 다가가요',
-      '방 안의 커튼을 끝까지 활짝 열어 햇빛을 맞이해요',
-      '창문을 잠시 열어 신선한 바람으로 환기시켜요',
+      '아침에 일어나 창가로 가볍게 다가가',
+      '방 안의 커튼을 끝까지 활짝 열어 햇빛을 맞이해',
+      '창문을 잠시 열어 신선한 바람으로 환기시켜',
     ],
     tags: ['일상', '루틴', '매일'],
     badge: '매일',
@@ -83,11 +84,11 @@ const missionDataMap: Record<string, MissionDetails> = {
 
 const getMissionDetails = (title: string): MissionDetails => {
   return missionDataMap[title] || {
-    recommendation: '하루의 작은 목표를 완수하며 나만의 긍정적인 루틴을 쌓아가고 자립 에너지를 충전하는 미션입니다.',
+    recommendation: '하루의 작은 목표를 완수하며 나만의 긍정적인 루틴을 쌓아가고 자립 에너지를 충전하는 미션이야.',
     steps: [
-      '오늘 미션 내용을 다시 한번 확인해요',
-      '미션 행동을 천천히 차근차근 실행합니다',
-      '수행을 완료하고 미션 완료 버튼을 눌러 점수를 받아요',
+      '오늘 미션 내용을 다시 한번 확인해',
+      '미션 행동을 천천히 차근차근 실행해',
+      '수행을 완료하고 미션 완료 버튼을 눌러 점수를 받아',
     ],
     tags: ['일상', '자립', '매일'],
     badge: '매일',
@@ -97,6 +98,7 @@ const getMissionDetails = (title: string): MissionDetails => {
 interface MissionDetailModalProps {
   visible: boolean;
   currentMission: string;
+  hasFallback?: boolean;
   onClose: () => void;
   onComplete: () => void;
   onChangeToSmaller: () => void;
@@ -105,6 +107,7 @@ interface MissionDetailModalProps {
 export default function MissionDetailModal({
   visible,
   currentMission,
+  hasFallback = true,
   onClose,
   onComplete,
   onChangeToSmaller,
@@ -149,7 +152,7 @@ export default function MissionDetailModal({
                 </View>
                 <View style={tw`flex-1`}>
                   <Text style={tw`text-white text-lg font-bold`}>
-                    {currentMission}
+                    {formatLongTitle(currentMission)}
                   </Text>
                 </View>
               </View>
@@ -190,13 +193,15 @@ export default function MissionDetailModal({
                 <Text style={tw`text-white font-bold text-base`}>미션 완료하기</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={onChangeToSmaller}
-                style={tw`bg-gray-100 py-4 rounded-[20px] w-full items-center justify-center`}
-              >
-                <Text style={tw`text-gray-800 font-bold text-base`}>더 작은 미션으로 바꾸기</Text>
-              </TouchableOpacity>
+              {hasFallback && (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={onChangeToSmaller}
+                  style={tw`bg-gray-100 py-4 rounded-[20px] w-full items-center justify-center`}
+                >
+                  <Text style={tw`text-gray-800 font-bold text-base`}>더 작은 미션으로 바꾸기</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </ScrollView>
         </View>

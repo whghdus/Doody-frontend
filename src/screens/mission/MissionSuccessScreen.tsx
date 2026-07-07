@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import Background from '../../components/common/Background';
 import SpeechBubble from '../../components/common/SpeechBubble';
 import HappySvg from '../../assets/doody/happyDoody.webp';

@@ -3,13 +3,14 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 
 import DoodySvg from '../../assets/doody/Doody.webp';
 import BrushDoodySvg from '../../assets/doody/brushDoody.webp';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
 import SadDoodySvg from '../../assets/doody/sadDoody.webp';
 import SmileDoodySvg from '../../assets/doody/smileDoody.webp';
+import ExplorationDoodySvg from '../../assets/doody/explorationDoody.webp';
 import EggDoodySvg from '../../assets/doody/eggDoody.webp';
 import SalaryDoodySvg from '../../assets/doody/salaryDoodt.webp';
 import GreenDoodySvg from '../../assets/doody/greenDoody.webp';
@@ -23,8 +24,9 @@ const DOODY_SVGS = [
   HappyDoodySvg, 
   SadDoodySvg, 
   SmileDoodySvg,
-  SalaryDoodySvg, // index 5
-  GreenDoodySvg   // index 6
+  ExplorationDoodySvg, // index 5
+  SalaryDoodySvg, // index 6
+  GreenDoodySvg   // index 7
 ];
 
 interface DoodyCollectionScreenProps {
@@ -85,7 +87,7 @@ export default function DoodyCollectionScreen({ onBack, onDoodyClick }: DoodyCol
                     <View style={tw`w-full h-full items-center justify-center relative`}>
                       <Image
                         source={item.SvgComponent}
-                        style={{ width: '100%', height: '100%', tintColor: '#D1D5DB' }}
+                        style={[tw`opacity-20`, { width: '100%', height: '100%', tintColor: '#9CA3AF' }]}
                         contentFit="contain"
                       />
                       <Text style={tw`absolute text-gray-500 font-black text-2xl`}>?</Text>

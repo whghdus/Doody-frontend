@@ -19,6 +19,7 @@ export interface UserResponse {
   hanaMoney: number;
   createdAt: string;
   updatedAt: string;
+  completedMissionCount: number;
   onboarding: {
     onboardingResponseId: number;
     gapAxis: string;
@@ -65,7 +66,7 @@ export const userApi = {
       email: responseData.email,
       nickname: responseData.nickname,
       points: responseData.hanaMoney ?? 0,
-      missionCount: 0, // Fallback since backend does not return missionCount
+      missionCount: responseData.completedMissionCount ?? 0,
       currentStep: 0,
     };
   },

@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 
 interface MissionSwapScreenProps {
   selectedSmallerIdx: number;
@@ -28,7 +28,7 @@ export default function MissionSwapScreen({
     {
       emoji: '👀',
       title: '잔액 한 번만 보고 닫기',
-      subtitle: '앱을 열고 숫자만 확인해요',
+      subtitle: '앱을 열고 숫자만 확인해',
       badge: '쉬움',
       badgeBg: 'bg-[#E6F4F1]',
       badgeText: 'text-[#008C75]',
@@ -36,7 +36,7 @@ export default function MissionSwapScreen({
     {
       emoji: '📝',
       title: '오늘 돈 쓴 게 있었는지 떠올리기',
-      subtitle: '있었다면 하나만 기록해요',
+      subtitle: '있었다면 하나만 기록해',
       badge: '보통',
       badgeBg: 'bg-amber-50',
       badgeText: 'text-amber-600',
@@ -65,19 +65,19 @@ export default function MissionSwapScreen({
                 <Path d="M7 13L1 7L7 1" stroke="#1F2A26" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
               </Svg>
             </TouchableOpacity>
-            <Text style={tw`text-gray-900 text-lg font-bold flex-1`}>조금 더 작은 걸음으로 바꿔볼게요</Text>
+            <Text style={tw`text-gray-900 text-lg font-bold flex-1`}>조금 더 작은 걸음으로 바꿔볼게</Text>
           </View>
 
           {/* Top Green Box */}
           <View style={tw`bg-[#E6F4F1] rounded-[20px] p-4 mb-6`}>
             <Text style={tw`text-[#008C75] text-sm font-bold text-center leading-relaxed`}>
-              괜찮아요. 지금 가능한 만큼만 해도 충분해요.
+              괜찮아. 지금 가능한 만큼만 해도 충분해.
             </Text>
           </View>
 
           {/* Section Title */}
           <Text style={tw`text-gray-700 text-sm font-bold text-center mb-5`}>
-            💳 자립 미션을 작게 나눴어요
+            💳 자립 미션을 작게 나눴어
           </Text>
 
           {/* Three Swapping Options */}

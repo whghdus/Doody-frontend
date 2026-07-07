@@ -8,12 +8,14 @@ import {
   Dimensions,
   SafeAreaView,
   Alert,
+  Platform,
 } from 'react-native';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import MapView, { UrlTile, Marker, Region } from 'react-native-maps';
+import CheongnaMapImg from '../../assets/cheongna_map.png';
 
 import CatchScreen from './CatchScreen';
 import DoodySvg from '../../assets/doody/Doody.webp';
@@ -21,26 +23,18 @@ import BrushDoodySvg from '../../assets/doody/brushDoody.webp';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
 import SadDoodySvg from '../../assets/doody/sadDoody.webp';
 import SmileDoodySvg from '../../assets/doody/smileDoody.webp';
+import ExplorationDoodySvg from '../../assets/doody/explorationDoody.webp';
+import SalaryDoodySvg from '../../assets/doody/salaryDoodt.webp';
+import GreenDoodySvg from '../../assets/doody/greenDoody.webp';
 import ConnectionSuccessScreen from './ConnectionSuccessScreen';
 import NextStageScreen from '../mission/NextStageScreen';
 import { collectionPinApi } from '../../api/collectionPin';
-import { useCollectionStore } from '../../store/useCollectionStore';
+import { useCollectionStore, mapDoodyIdToIndex } from '../../store/useCollectionStore';
+import { hanaFinanceApi } from '../../api/hanaFinance';
 
 const { width, height } = Dimensions.get('window');
 
-const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg];
-
-const mapDoodyIdToIndex = (doodyId: string): number => {
-  const lower = doodyId.toLowerCase();
-  if (lower.includes('default') || lower.includes('001')) return 0;
-  if (lower.includes('brush') || lower.includes('002')) return 1;
-  if (lower.includes('happy') || lower.includes('003')) return 2;
-  if (lower.includes('sad') || lower.includes('004')) return 3;
-  if (lower.includes('smile') || lower.includes('common') || lower.includes('005')) return 4;
-  if (lower.includes('salary') || lower.includes('connection') || lower.includes('006')) return 5;
-  if (lower.includes('green') || lower.includes('autonomy') || lower.includes('007')) return 6;
-  return 0;
-};
+const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg, ExplorationDoodySvg, SalaryDoodySvg, GreenDoodySvg];
 
 interface ConnectionScreenProps {
   onBackToHome?: () => void;
@@ -53,7 +47,8 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
   const [viewState, setViewState] = useState<'map' | 'catch' | 'success' | 'unlock'>('map');
   const [selectedDoodyIndex, setSelectedDoodyIndex] = useState<number>(0);
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
-  
+  const [capturedReward, setCapturedReward] = useState<number>(30);
+
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
   const [institutions, setInstitutions] = useState<any[]>([]);
@@ -85,7 +80,7 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('위치 권한 필요', '지도 기능을 사용하려면 위치 권한이 필요합니다.');
+        Alert.alert('위치 권한 필요', '지도 기능을 사용하려면 위치 권한이 필요해.');
         const fallbackLat = 37.5665;
         const fallbackLon = 126.9780;
         const fallbackRegion = {
@@ -140,24 +135,39 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
   };
 
   const fetchInstitutions = async (lat: number, lon: number) => {
+    const RANDOM_NAMES = ['하나은행', '청년센터', '자립지원센터', '공공센터'];
+
     try {
       const pins = await collectionPinApi.getNearbyPins(lat, lon, 2000);
-      const mapped = pins.map((pin) => ({
-        id: pin.pinId,
-        lat: pin.lat,
-        lon: pin.lng,
-        tags: { name: pin.title || pin.doodyName },
-        doodyIndex: mapDoodyIdToIndex(pin.doodyId),
-        captureAvailable: pin.captureAvailable
-      }));
+
+      // Filter out Salary (Connection) and Green (Autonomy) doodies.
+      const filteredPins = pins.filter((pin) => {
+        const lower = pin.doodyId.toLowerCase();
+        const isSalaryOrGreen = lower.includes('salary') || lower.includes('connection') || lower.includes('006') ||
+          lower.includes('green') || lower.includes('autonomy') || lower.includes('007');
+        return !isSalaryOrGreen;
+      });
+
+      const mapped = filteredPins.map((pin) => {
+        return {
+          id: pin.pinId,
+          lat: pin.lat,
+          lon: pin.lng,
+          tags: {
+            name: (!pin.title || pin.title.includes('발견 지점') || pin.title.includes('두디'))
+              ? RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)]
+              : pin.title
+          },
+          doodyIndex: Math.floor(Math.random() * 6), // 0 to 5 (랜덤 두디 이미지 부여)
+          captureAvailable: pin.captureAvailable
+        };
+      });
+
+      console.log(`Setting institutions with ${mapped.length} real pins.`);
       setInstitutions(mapped);
     } catch (e) {
       console.error('Failed to fetch nearby pins from backend:', e);
-      setInstitutions([
-        { id: 'mock-1', lat: lat + 0.005, lon: lon + 0.005, tags: { name: '가상 하나은행' }, doodyIndex: 0, captureAvailable: false },
-        { id: 'mock-2', lat: lat - 0.003, lon: lon + 0.006, tags: { name: '가상 청년센터' }, doodyIndex: 1, captureAvailable: true },
-        { id: 'mock-3', lat: lat + 0.002, lon: lon - 0.004, tags: { name: '가상 하나은행 본점' }, doodyIndex: 2, captureAvailable: false },
-      ]);
+      setInstitutions([]);
     }
   };
 
@@ -175,7 +185,7 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
           location.coords.latitude,
           location.coords.longitude
         );
-        
+
         // Auto-unlock newly caught Doodies in the user collection store
         if (captureResult.collectedDudy && captureResult.collectedDudy.length > 0) {
           const { unlockDoody } = useCollectionStore.getState();
@@ -183,19 +193,26 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
             if (dudy.id === 'd_rhythm_common' || dudy.axis === 'rhythm') {
               unlockDoody(4); // SmileDoody
             } else if (dudy.axis === 'autonomy') {
-              unlockDoody(6); // GreenDoody
+              unlockDoody(7); // GreenDoody
             } else if (dudy.axis === 'connection') {
-              unlockDoody(5); // SalaryDoody
+              unlockDoody(6); // SalaryDoody
+            } else if (dudy.id.toLowerCase().includes('exploration') || dudy.id.toLowerCase().includes('008')) {
+              unlockDoody(5); // ExplorationDoody
             }
           });
+        }
+
+        if (captureResult.reward && captureResult.reward.hanaMoney !== undefined) {
+          setCapturedReward(captureResult.reward.hanaMoney);
         }
       }
     } catch (e) {
       console.error('Failed to capture doody on backend:', e);
-      Alert.alert('포획 실패', '서버와 통신하는 중 오류가 발생했습니다.');
+      Alert.alert('포획 실패', '서버와 통신하는 중 오류가 발생했어.');
     }
     setViewState('success');
   };
+
 
   const handleGoHome = () => {
     if (onBackToHome) {
@@ -218,10 +235,23 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
 
   if (viewState === 'success') {
     return (
-      <ConnectionSuccessScreen 
-        onGoHome={() => setViewState('unlock')} 
+      <ConnectionSuccessScreen
+        onGoHome={async () => {
+          try {
+            const status = await hanaFinanceApi.getUnlockStatus('CONNECTION');
+            if (status.unlockable && !status.unlocked) {
+              setViewState('unlock');
+            } else {
+              setViewState('map');
+            }
+          } catch (e) {
+            console.error('Failed to check connection unlock status', e);
+            setViewState('map');
+          }
+        }}
         onGoToPokedex={handleGoToPokedex}
         doodyIndex={selectedDoodyIndex}
+        capturedReward={capturedReward}
       />
     );
   }
@@ -241,11 +271,39 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
   // MAP VIEW
   return (
     <View style={[tw`flex-1 bg-[#E1EDE4]`]}>
-      {/* Map Layer */}
-      {region ? (
+      {/* Map Container */}
+      <View style={tw`flex-1 relative overflow-hidden`}>
+        {/* Map Layer */}
+        {Platform.OS === 'web' ? (
+          <>
+            <Image source={CheongnaMapImg} style={tw`absolute w-full h-full`} contentFit="cover" />
+
+            {/* Hana Bank Cheongna Main Branch Pin */}
+            <TouchableOpacity
+            style={[tw`absolute items-center z-20`, { top: '32%', left: '20%' }]}
+            onPress={() => {
+              const pinId = institutions.length > 0 ? institutions[0].id : 'mock-pin';
+              const doodyIndex = institutions.length > 0 ? institutions[0].doodyIndex : 0;
+              handleCatchDoody(pinId, doodyIndex);
+            }}
+          >
+            <View style={tw`bg-[#222] px-3 py-1 rounded-full mb-1 shadow-sm`}>
+              <Text style={tw`text-white font-bold text-[10px]`}>하나금융그룹 청라본사</Text>
+            </View>
+            <View style={tw`items-center`}>
+              <View style={tw`w-14 h-14 bg-[#E1EDE4] rounded-full border-4 border-[#008C75] items-center justify-center shadow-md z-10`}>
+                <View style={tw`w-9 h-9`}>
+                  <Image source={ExplorationDoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+                </View>
+              </View>
+              <View style={[tw`w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[12px] border-t-[#008C75]`, { marginTop: -2 }]} />
+            </View>
+          </TouchableOpacity>
+          </>
+        ) : region ? (
         <MapView
           ref={mapRef}
-          style={tw`flex-1 absolute inset-0`}
+          style={tw`absolute inset-0`}
           region={region ?? undefined}
           showsUserLocation={true}
           showsMyLocationButton={false}
@@ -261,7 +319,6 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
           />
 
           {institutions.map((inst) => {
-            const SvgComponent = DOODY_SVGS[inst.doodyIndex];
             const isFar = inst.captureAvailable !== undefined ? !inst.captureAvailable : true;
 
             return (
@@ -272,15 +329,12 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
                 opacity={isFar ? 0.4 : 1}
               >
                 <View style={tw`items-center`}>
-                  <View style={tw`bg-[#222] px-3 py-1 rounded-full mb-1 shadow-sm`}>
-                    <Text style={tw`text-white font-bold text-[10px]`}>{inst.tags?.name || '청년센터/하나은행'}</Text>
-                  </View>
-                  <View style={tw`w-14 h-14 bg-[#E1EDE4] rounded-full border-2 border-[#008C75] items-center justify-center shadow-md`}>
-                    <View style={tw`w-10 h-10`}>
-                      <Image source={SvgComponent} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+                  <View style={tw`w-14 h-14 bg-[#E1EDE4] rounded-full border-4 border-[#008C75] items-center justify-center shadow-md z-10`}>
+                    <View style={tw`w-9 h-9`}>
+                      <Image source={DOODY_SVGS[inst.doodyIndex]} style={{ width: '100%', height: '100%' }} contentFit="contain" />
                     </View>
                   </View>
-                  <View style={tw`w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-[#008C75] -mt-[1px]`} />
+                  <View style={[tw`w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[12px] border-t-[#008C75]`, { marginTop: -2 }]} />
                 </View>
               </Marker>
             );
@@ -318,24 +372,25 @@ export default function ConnectionScreen({ onBackToHome, onToggleNavBar, onGoToC
             <Feather name="minus" size={20} color="#333" />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={tw`bg-white/90 rounded-full p-3 shadow-sm items-center mt-2`}
           onPress={handleGoToMyLocation}
         >
           <Feather name="crosshair" size={20} color="#333" />
         </TouchableOpacity>
       </View>
+      </View>
 
       {/* --- Bottom Card --- */}
-      <View style={[tw`absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl pt-8 px-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-40`, { paddingBottom: insets.bottom + 90 }]}>
+      <View style={[tw`bg-white rounded-t-3xl pt-8 px-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-40`, { paddingBottom: insets.bottom + 90 }]}>
         <Text style={tw`text-gray-900 font-black text-lg mb-1`}>
           가까운 청년센터나 하나은행 핀을 누르면 <Text style={tw`text-[#008C75]`}>나가보기</Text>.
         </Text>
         <Text style={tw`text-gray-900 font-black text-lg mb-6`}>
           도착하면 카메라로
         </Text>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           activeOpacity={0.8}
           onPress={onBackToHome}
           style={tw`bg-[#F2F5F3] rounded-2xl py-4 flex-row items-center justify-center`}

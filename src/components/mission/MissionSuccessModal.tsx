@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import tw from 'twrnc';
+import { BlurView } from 'expo-blur';
+import PointSvg from '../../assets/icons/point.svg';
+import tw from '../../utils/tailwind';
 
 interface MissionSuccessModalProps {
   visible: boolean;
@@ -36,18 +38,18 @@ export default function MissionSuccessModal({
               미션 완료!
             </Text>
             <Text style={tw`text-sm font-bold text-center text-[#008C75]/80 mb-6`}>
-              {currentMission}를 해냈어요
+              {currentMission}를 해냈어
             </Text>
 
             {/* Point Card */}
             <View style={tw`bg-[#FFF9E6] rounded-[20px] p-4 flex-row items-center mb-3`}>
-              <View style={tw`w-8 h-8 rounded-full bg-[#F5B800] items-center justify-center mr-4`}>
-                <Text style={tw`text-white font-black text-sm`}>P</Text>
+              <View style={tw`mr-4`}>
+                <PointSvg width={32} height={32} />
               </View>
               <View>
-                <Text style={tw`text-[#D48C00] text-lg font-bold`}>+30P</Text>
+                <Text style={tw`text-[#D48C00] text-lg font-bold`}>+30</Text>
                 <Text style={tw`text-gray-500 text-xs font-semibold mt-0.5`}>
-                  하나머니 적립 완료
+                  금 RWA 토큰 적립 완료
                 </Text>
               </View>
             </View>
@@ -64,7 +66,7 @@ export default function MissionSuccessModal({
                   이번 달 기록 14개째!
                 </Text>
                 <Text style={tw`text-gray-400 text-xs font-semibold mt-0.5`}>
-                  내일도 함께해요
+                  내일도 함께해
                 </Text>
               </View>
             </View>

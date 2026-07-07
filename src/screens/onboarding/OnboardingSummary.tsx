@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { useOnboardingStore } from '../../store/useOnboardingStore';
 import { COLORS } from '../../constants/theme';
 
@@ -107,7 +107,7 @@ export default function OnboardingSummary({ onNext }: OnboardingSummaryProps) {
           </Text>
           <Text style={tw`text-gray-500 text-sm leading-relaxed`}>
             지금 목표와 답변을 바탕으로,{'\n'}
-            두디가 먼저 시작할 방향과 첫 미션을 골랐어요.
+            두디가 먼저 시작할 방향과 첫 미션을 골랐어.
           </Text>
         </View>
 

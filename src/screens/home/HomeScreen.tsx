@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { Feather } from '@expo/vector-icons';
 import Background from '../../components/common/Background';
 import { COLORS } from '../../constants/theme';
@@ -22,6 +22,7 @@ import { useCollectionStore } from '../../store/useCollectionStore';
 import { userApi } from '../../api/user';
 import { missionApi, Mission } from '../../api/mission';
 import { checkInApi } from '../../api/checkIn';
+import { reportApi } from '../../api/report';
 
 // Logos
 import DoodyLogo from '../../assets/logos/doodyLogo.png';
@@ -32,7 +33,7 @@ import DoodySvg from '../../assets/doody/Doody.webp';
 import NightDoodySvg from '../../assets/doody/nightDoody.webp';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
 
-import NavBar, { TabType } from '../../components/common/NavBar';
+import NavBar, { TabType, NAV_BAR_HEIGHT } from '../../components/common/NavBar';
 import MissionCard from '../../components/mission/MissionCard';
 import MissionDetailModal from '../../components/mission/MissionDetailModal';
 import MissionSwapModal from '../../components/mission/MissionSwapModal';
@@ -45,6 +46,8 @@ import NightCheckInScreen from './NightCheckInScreen';
 import IndependenceScreen from '../independence/IndependenceScreen';
 import ConnectionScreen from '../connection/ConnectionScreen';
 import MorningSuccessModal from '../../components/home/MorningSuccessModal';
+import DoodyChatInputModal from '../../components/home/DoodyChatInputModal';
+import DoodyQuizModal from '../../components/home/DoodyQuizModal';
 import DoodyCollectionScreen from '../report/DoodyCollectionScreen';
 import DoodyDetailScreen from '../report/DoodyDetailScreen';
 import CollectionSvg from '../../assets/icons/collection.svg';
@@ -53,7 +56,7 @@ const SMALLER_MISSIONS = [
   {
     emoji: '👀',
     title: '잔액 한 번만 보고 닫기',
-    subtitle: '앱을 열고 숫자만 확인해요',
+    subtitle: '앱을 열고 숫자만 확인해',
     badge: '쉬움',
     badgeBg: 'bg-[#E6F4F1]',
     badgeText: 'text-[#008C75]',
@@ -61,7 +64,7 @@ const SMALLER_MISSIONS = [
   {
     emoji: '📝',
     title: '오늘 돈 쓴 게 있었는지 떠올리기',
-    subtitle: '있었다면 하나만 기록해요',
+    subtitle: '있었다면 하나만 기록해',
     badge: '보통',
     badgeBg: 'bg-amber-50',
     badgeText: 'text-amber-600',
@@ -113,6 +116,12 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
   const [showCollection, setShowCollection] = useState<boolean>(false);
   const [selectedCollectionDoodyId, setSelectedCollectionDoodyId] = useState<string | null>(null);
 
+  // Quiz States
+  const [showQuizChat, setShowQuizChat] = useState<boolean>(false);
+  const [showQuiz, setShowQuiz] = useState<boolean>(false);
+  const [showQuizReward, setShowQuizReward] = useState<boolean>(false);
+  const [quizIsCorrect, setQuizIsCorrect] = useState<boolean>(false);
+
   // Always show NavBar when switching tabs
   useEffect(() => {
     setIsNavBarVisible(true);
@@ -131,7 +140,14 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
       const todayMission = await missionApi.getTodayMission();
       setMissionData(todayMission);
       setCurrentMission(todayMission.title);
-      if (todayMission.missionState === 'gated') {
+
+      const stateStr = todayMission.missionState?.toLowerCase();
+      const today = new Date().toISOString().split('T')[0];
+      const localCompletedDate = await AsyncStorage.getItem('daily_mission_completed_date');
+
+      if (stateStr === 'completed' || stateStr === 'done' || localCompletedDate === today) {
+        setHomeMode('completed');
+      } else if (stateStr === 'gated') {
         setHomeMode('resting');
       } else {
         setHomeMode('default');
@@ -145,23 +161,62 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
     fetchHomeData();
   }, [fetchHomeData, activeTab]);
 
+  // Removed saveToAsyncStorage since backend returns proper personalized mission directly in autonomyApi.getMission
+
   useEffect(() => {
-    const checkMorningStatus = async () => {
+    const checkCheckInStatus = async () => {
       try {
-        // 데모 시연을 위해 하루 한 번 제한을 풀고 항상 보이도록 설정합니다.
-        // const today = new Date().toISOString().split('T')[0];
-        // const lastCheckIn = await AsyncStorage.getItem('lastMorningCheckIn');
-        // if (lastCheckIn !== today) {
-        //   setHasCheckedInMorning(false);
-        // }
-        // setHasCheckedInMorning(false);
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Check local storage first
+        const localMorning = await AsyncStorage.getItem('morning_checkin_date');
+        const localNight = await AsyncStorage.getItem('night_checkin_date');
+        
+        let hasMorning = localMorning === today;
+        let hasNight = localNight === today;
+
+        if (!hasMorning || !hasNight) {
+          const report = await reportApi.getRecoveryReport('week');
+          const rhythmGroup = report.recordGroups?.find(g => g.axis === 'RHYTHM');
+          
+          if (rhythmGroup && rhythmGroup.records.length > 0) {
+            rhythmGroup.records.forEach(r => {
+              const timeStr = r.recordedAt || r.recordDate;
+              if (timeStr && timeStr.startsWith(today)) {
+                // Determine if it was morning or night by title if possible, else fallback to time
+                if (r.title?.includes('오늘의 기분') || r.missionType === 'MORNING_RHYTHM') {
+                  hasMorning = true;
+                } else if (r.title?.includes('하루 한 마디') || r.missionType === 'EVENING_RHYTHM') {
+                  hasNight = true;
+                } else {
+                  const dateObj = new Date(timeStr);
+                  if (dateObj.getHours() < 14) {
+                    hasMorning = true;
+                  } else {
+                    hasNight = true;
+                  }
+                }
+              }
+            });
+          }
+        }
+        
+        setHasCheckedInMorning(hasMorning);
+
+        const now = new Date();
+        if (homeMode === 'resting' && !hasNight && now.getHours() >= 14) {
+          setShowNightCheckIn(true);
+        } else {
+          setShowNightCheckIn(false);
+        }
       } catch (error) {
-        console.error('Failed to read async storage', error);
-        setHasCheckedInMorning(false);
+        console.error('Failed to verify check-in status from backend', error);
+        // Default to not showing to prevent multiple popups on error
       }
     };
-    checkMorningStatus();
-  }, []);
+    
+    checkCheckInStatus();
+  }, [homeMode]);
 
   const handleCompleteMorning = async (mood: number) => {
     try {
@@ -186,7 +241,7 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
       }
 
       const today = new Date().toISOString().split('T')[0];
-      await AsyncStorage.setItem('lastMorningCheckIn', today);
+      await AsyncStorage.setItem('morning_checkin_date', today);
     } catch (error) {
       console.error('Failed morning check-in', error);
     }
@@ -196,10 +251,6 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
   };
 
   const handleCloseMorning = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      await AsyncStorage.setItem('lastMorningCheckIn', today);
-    } catch (error) { }
     setHasCheckedInMorning(true);
   };
 
@@ -207,8 +258,14 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
   const isCompleted = homeMode === 'completed';
 
   const handleStartMission = useCallback(() => {
-    // Navigate to appropriate tab based on nextPath from API
-    if (missionData && missionData.nextPath) {
+    // Navigate to appropriate tab based on axis from API
+    if (missionData && missionData.axis) {
+      if (missionData.axis === 'AUTONOMY') {
+        setActiveTab('independence');
+      } else if (missionData.axis === 'CONNECTION') {
+        setActiveTab('connection');
+      }
+    } else if (missionData && missionData.nextPath) {
       if (missionData.nextPath === '/autonomy') {
         setActiveTab('independence');
       } else if (missionData.nextPath === '/connection') {
@@ -229,7 +286,8 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
 
   const handleRestForToday = useCallback(async () => {
     try {
-      await missionApi.restToday();
+      await missionApi.swapMission('easy');
+      fetchHomeData();
     } catch (error) {
       console.error('Failed to rest today', error);
     }
@@ -261,7 +319,13 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
   }
 
   if (showNightCheckIn) {
-    return <NightCheckInScreen onClose={() => setShowNightCheckIn(false)} />;
+    return <NightCheckInScreen onClose={async () => {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        await AsyncStorage.setItem('night_checkin_date', today);
+      } catch (e) {}
+      setShowNightCheckIn(false);
+    }} />;
   }
 
   if (selectedCollectionDoodyId) {
@@ -302,13 +366,16 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
         onVerifyComplete={async (photoUri) => {
           try {
             const res = await missionApi.completeMission(photoUri);
+            const today = new Date().toISOString().split('T')[0];
+            await AsyncStorage.setItem('daily_mission_completed_date', today);
+            
             setPoints(res.newTotalPoints);
             setMissionCount(res.currentStep);
             setHomeMode('completed');
             setHomeViewState('success_speak');
           } catch (error) {
             console.error('Failed to complete mission', error);
-            Alert.alert('오류', '미션 완료 처리 중 문제가 발생했습니다.');
+            Alert.alert('오류', '미션 완료 처리 중 문제가 발생했어.');
           }
         }}
       />
@@ -391,27 +458,19 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
                   </Text>
                 </View>
 
-                {/* "자러 가기" or "낮에 눈 떠보기" toggle button */}
+                {/* "자러 가기" or "낮에 눈 떠보기" badge (Static) */}
                 {isResting ? (
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => setShowNightCheckIn(true)}
-                    style={tw`bg-white/95 px-4 py-2 rounded-full border border-gray-100 shadow-sm flex-row items-center`}
-                  >
+                  <View style={tw`bg-white/95 px-4 py-2 rounded-full border border-gray-100 shadow-sm flex-row items-center`}>
                     <Text style={tw`text-[${COLORS.primary}] text-xs font-bold`}>
                       🌙 자러 가기
                     </Text>
-                  </TouchableOpacity>
+                  </View>
                 ) : (
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => setHasCheckedInMorning(false)}
-                    style={tw`bg-white/95 px-4 py-2 rounded-full border border-gray-100 shadow-sm flex-row items-center`}
-                  >
+                  <View style={tw`bg-white/95 px-4 py-2 rounded-full border border-gray-100 shadow-sm flex-row items-center`}>
                     <Text style={tw`text-[${COLORS.primary}] text-xs font-bold`}>
                       ✨ 낮에 눈 떠보기
                     </Text>
-                  </TouchableOpacity>
+                  </View>
                 )}
 
                 {/* Collection Icon Button */}
@@ -425,22 +484,20 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
               </View>
             </View>
 
-            {/* Scroll Container */}
-            <View style={[tw`flex-grow px-6`, { paddingBottom: Platform.OS === 'ios' ? 80 : 80 + insets.bottom }]}>
-              <ScrollView
-                contentContainerStyle={tw`flex-grow justify-between pt-4 pb-4`}
-                showsVerticalScrollIndicator={false}
-              >
+            {/* Main Container (No Scroll) */}
+            <View style={[tw`flex-1 px-6 pt-6`, { paddingBottom: NAV_BAR_HEIGHT + insets.bottom + 16 }]}>
+              <View style={tw`flex-1 justify-between`}>
                 {!isResting ? (
                   <>
                     {/* Touch Indicator & Doody Character */}
-                    <View style={tw`flex-grow justify-center items-center mt-8`}>
+                    <View style={tw`flex-1 justify-center items-center mt-2`}>
                       <TouchableOpacity
                         activeOpacity={0.9}
-                        style={tw`items-center justify-center`}
+                        onPress={() => setShowQuizChat(true)}
+                        style={tw`flex-1 items-center justify-center w-full`}
                       >
                         {/* Touch!! label */}
-                        <View style={tw`items-center mb-3`}>
+                        <View style={tw`items-center mb-3 mt-auto`}>
                           <Text style={tw`text-[${COLORS.primary}] text-sm font-black`}>Touch!!</Text>
                           <Svg width={10} height={6} viewBox="0 0 10 5" fill="none">
                             <Path
@@ -454,7 +511,7 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
                         </View>
 
                         {/* Doody Character */}
-                        <View style={tw`w-80 h-64 items-center justify-center`}>
+                        <View style={tw`w-full flex-1 max-w-[320px] max-h-[256px] min-h-[140px] items-center justify-center mb-auto`}>
                           {isCompleted ? (
                             <Image source={HappyDoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
                           ) : (
@@ -464,8 +521,17 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
                       </TouchableOpacity>
                     </View>
 
-                    {/* Mission Card - only show in default mode */}
-                    {!isCompleted && (
+                    {/* Mission Card or Completed Card */}
+                    {isCompleted ? (
+                      <View style={tw`w-full bg-white rounded-[32px] p-8 border border-gray-100 shadow-lg mb-4 mt-2`}>
+                        <View style={tw`items-center justify-center`}>
+                          <Text style={tw`text-gray-800 text-xl font-black mb-3`}>일일 미션 완료! 🎉</Text>
+                          <Text style={tw`text-gray-500 text-sm font-bold text-center leading-relaxed`}>
+                            오늘 하루도 고생 많았어.{'\n'}내일 또 새로운 미션으로 만나자!
+                          </Text>
+                        </View>
+                      </View>
+                    ) : (
                       <MissionCard
                         currentMission={currentMission}
                         onRest={toggleResting}
@@ -475,8 +541,8 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
                   </>
                 ) : (
                   /* Night/Rest state - Sleeping Doody */
-                  <View style={tw`flex-1 justify-center items-center my-12`}>
-                    <View style={tw`w-80 h-80 items-center justify-center mt-8`}>
+                  <View style={tw`flex-1 justify-center items-center`}>
+                    <View style={tw`w-full flex-1 max-w-[320px] max-h-[320px] min-h-[160px] items-center justify-center`}>
                       <Image source={NightDoodySvg} style={{ width: '100%', height: '100%' }} contentFit="contain" />
                     </View>
                     <Text style={tw`text-white/80 text-base font-bold mt-4 text-center leading-6 px-6`}>
@@ -484,12 +550,13 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
                     </Text>
                   </View>
                 )}
-              </ScrollView>
+              </View>
 
               {/* Mission Detail Modal */}
               <MissionDetailModal
                 visible={homeViewState === 'detail'}
                 currentMission={currentMission}
+                hasFallback={missionData?.hasFallback ?? true}
                 onClose={() => setHomeViewState('main')}
                 onComplete={handleCompleteMission}
                 onChangeToSmaller={() => setHomeViewState('smaller')}
@@ -504,6 +571,42 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
                 onRest={handleRestForToday}
                 onStartSmaller={handleStartSmallerMission}
                 onClose={() => setHomeViewState('main')}
+              />
+
+              {/* Doody Quiz Flow Modals */}
+              <DoodyChatInputModal
+                visible={showQuizChat}
+                onClose={() => setShowQuizChat(false)}
+                onSubmit={(text) => {
+                  setShowQuizChat(false);
+                  setTimeout(() => setShowQuiz(true), 300);
+                }}
+              />
+              <DoodyQuizModal
+                visible={showQuiz}
+                onClose={() => setShowQuiz(false)}
+                onComplete={(isCorrect) => {
+                  setShowQuiz(false);
+                  setQuizIsCorrect(isCorrect);
+                  setTimeout(() => setShowQuizReward(true), 300);
+                }}
+              />
+              <MorningSuccessModal
+                visible={showQuizReward}
+                onConfirm={async () => {
+                  setShowQuizReward(false);
+                  setPoints(p => p + (quizIsCorrect ? 50 : 30));
+                  if (quizIsCorrect) {
+                    try {
+                      await AsyncStorage.setItem('mock_quiz_completed', 'true');
+                    } catch (e) {
+                      console.warn(e);
+                    }
+                  }
+                }}
+                title={quizIsCorrect ? "정답이야! 축하해 🎉" : "아쉽지만 잘했어! 👏"}
+                description={quizIsCorrect ? "역시 대단해! 다음에도 기대할게." : "오답 노트 확인했지? 다음에 맞추면 돼!"}
+                points={quizIsCorrect ? 50 : 30}
               />
             </View>
 
@@ -547,7 +650,7 @@ export default function HomeScreen({ onRestartOnboarding }: HomeScreenProps) {
                 준비 중
               </Text>
               <Text style={tw`text-gray-400 text-sm text-center`}>
-                준비 중인 화면이에요.{'\n'}곧 만나볼 수 있어요!
+                준비 중인 화면이야.{'\n'}곧 만나볼 수 있어!
               </Text>
             </View>
           </SafeAreaView>
