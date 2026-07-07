@@ -30,6 +30,50 @@
 - **일관된 모바일 경험:** iOS 키보드 애니메이션(`KeyboardAvoidingView`), 통일된 입력바 UI, 유려한 바텀시트/모달 애니메이션을 통해 네이티브 앱 수준의 쾌적한 사용성을 제공합니다.
 - **반응형 핀 & 아이콘:** 웹과 앱 플랫폼 환경의 차이를 극복하기 위해 순수 React Native `View` 컴포넌트를 활용하여 어디서나 완벽한 형태의 마커와 말풍선을 렌더링합니다.
 
+## 🛠 기술 스택 (Tech Stack)
+
+### 프론트엔드 (Frontend)
+- **Framework & Library:** React Native (v0.81), Expo (v54), React (v19)
+- **Language:** TypeScript
+- **State Management:** Zustand
+- **Routing/Navigation:** React Navigation (v7)
+- **Styling:** Tailwind CSS (via `twrnc`)
+
+### 주요 라이브러리 (Key Libraries)
+- **Map & LBS:** `react-native-maps`, `expo-location`
+- **Networking:** Axios
+- **Storage:** `@react-native-async-storage/async-storage`, `expo-secure-store`
+- **UI & Assets:** `expo-image`, `@expo/vector-icons`, `react-native-svg`
+
+## 📁 폴더 및 파일 구조 (Folder Structure)
+
+```text
+src/
+├── api/             # 서버와 통신하는 Axios API 모듈 (auth, mission, report 등)
+├── assets/          # 이미지, 아이콘(SVG), 폰트 등 정적 리소스 모음
+│   ├── buttons/     # 각종 버튼 그래픽
+│   ├── doody/       # 두디 캐릭터 에셋 (웹피, PNG 등)
+│   ├── icons/       # UI 아이콘 리소스
+│   └── backgrounds/ # 배경 이미지 리소스
+├── components/      # 재사용 가능한 UI 컴포넌트
+│   ├── common/      # 공통 컴포넌트 (NavBar, BackButton, SpeechBubble 등)
+│   ├── home/        # 홈 화면 전용 모달 및 UI
+│   ├── mission/     # 미션 관련 카드 및 모달
+│   ├── onboarding/  # 온보딩 흐름에 사용되는 UI
+│   └── report/      # 리포트 및 타임라인 관련 UI
+├── constants/       # 앱 전체에서 사용되는 상수 및 테마 컬러 설정 (theme.ts 등)
+├── screens/         # 화면(Page) 레벨 컴포넌트
+│   ├── auth/        # 로그인/회원가입 화면
+│   ├── connection/  # 연결ON (지도 탐색, 두디 포획 화면)
+│   ├── home/        # 메인 홈, 아침/저녁 체크인 화면
+│   ├── independence/# 자립ON (로드맵, 미션 목록 등)
+│   ├── mission/     # 미션 상세, 미션 성공/교체 화면
+│   ├── onboarding/  # 초기 온보딩 플로우 화면
+│   └── report/      # 리포트, 두디 도감 화면
+├── store/           # Zustand를 이용한 전역 상태 관리 (useCollectionStore, useOnboardingStore 등)
+└── utils/           # 유틸리티 함수 (tailwind 설정, 문자열 포맷팅, 토큰 관리 등)
+```
+
 ---
 
 > 이 문서는 현재 구현된 코드와 프론트엔드 구조를 바탕으로 파악한 Doody의 핵심 기획과 컨셉을 정리한 내용입니다.
