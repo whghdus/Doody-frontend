@@ -1,11 +1,11 @@
 // src/App.tsx
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import tw from 'twrnc';
+import tw from './utils/tailwind';
 import { useOnboardingStore } from './store/useOnboardingStore';
 import Background from './components/common/Background';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -68,7 +68,7 @@ export default function App() {
             initialRouteName={initialRoute}
             screenOptions={{
               headerShown: false,
-              animation: 'slide_from_right', // iOS-like natural slide animation
+              animation: 'fade', // Smooth fade animation between screens
               contentStyle: { backgroundColor: 'transparent' }
             }}
           >

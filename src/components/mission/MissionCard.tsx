@@ -1,8 +1,9 @@
 // src/components/MissionCard.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { COLORS } from '../../constants/theme';
+import { formatLongTitle } from '../../utils/textUtils';
 
 interface MissionCardProps {
   currentMission: string;
@@ -25,12 +26,12 @@ export default function MissionCard({
 
       {/* Mission Title */}
       <Text style={tw`text-gray-900 text-xl font-bold mt-3`}>
-        {currentMission}
+        {formatLongTitle(currentMission)}
       </Text>
 
       {/* Subtitle */}
       <Text style={tw`text-gray-400 text-center text-xs mt-3 font-medium`}>
-        완료하면 회복 리포트에 기록돼요
+        완료하면 회복 리포트에 기록돼
       </Text>
 
       {/* Action Buttons */}

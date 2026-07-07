@@ -11,20 +11,24 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { StatusBar } from 'expo-status-bar';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DoodySvg from '../../assets/doody/Doody.webp';
 import BrushDoodySvg from '../../assets/doody/brushDoody.webp';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
 import SadDoodySvg from '../../assets/doody/sadDoody.webp';
 import SmileDoodySvg from '../../assets/doody/smileDoody.webp';
+import ExplorationDoodySvg from '../../assets/doody/explorationDoody.webp';
+import SalaryDoodySvg from '../../assets/doody/salaryDoodt.webp';
+import GreenDoodySvg from '../../assets/doody/greenDoody.webp';
 import BallSvg from '../../assets/icons/ball.svg';
 import HomeSvg from '../../assets/navbar/home.svg';
 import { Feather } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
-const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg];
+const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg, ExplorationDoodySvg, SalaryDoodySvg, GreenDoodySvg];
+const DOODY_NAMES = ['두디', '양치 두디', '해피 두디', '슬픈 두디', '스마일 두디', '탐험 두디', '회사 두디', '하나 두디'];
 
 interface CatchScreenProps {
   onSuccess: () => void;
@@ -36,11 +40,11 @@ interface CatchScreenProps {
 export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex = 0 }: CatchScreenProps) {
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
-  
+
   // State for catch tapping
   const [tapCount, setTapCount] = React.useState(0);
   const TARGET_TAPS = 5;
-  
+
   // Simple floating animation for the Doody
   const floatAnim = useRef(new Animated.Value(0)).current;
 
@@ -150,7 +154,7 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
     // Camera permissions are not granted yet.
     return (
       <View style={tw`flex-1 justify-center items-center bg-gray-100`}>
-        <Text style={tw`text-lg font-bold mb-4 text-center px-4`}>두디를 잡기 위해 카메라 권한이 필요합니다.</Text>
+        <Text style={tw`text-lg font-bold mb-4 text-center px-4`}>두디를 잡기 위해 카메라 권한이 필요해.</Text>
         <TouchableOpacity onPress={requestPermission} style={tw`bg-teal-500 px-6 py-3 rounded-full`}>
           <Text style={tw`text-white font-bold`}>권한 허용하기</Text>
         </TouchableOpacity>
@@ -174,18 +178,18 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
 
       {/* UI Elements constrained by Safe Area */}
       <View style={[tw`flex-1`, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-        
+
         {/* Center Target & Doody */}
         <View style={tw`flex-1 justify-center items-center relative`}>
           {/* HP / Tap Progress Bar */}
-          <View style={tw`bg-black/50 px-4 py-2 rounded-full mb-6 flex-row items-center border border-white/20 z-20`}>
+          <View style={tw`absolute top-10 bg-black/50 px-4 py-2 rounded-full flex-row items-center border border-white/20 z-20`}>
             <Text style={tw`text-white text-xs font-bold mr-3`}>두디 잡는 중</Text>
             <View style={tw`w-28 h-2.5 bg-white/20 rounded-full overflow-hidden`}>
-              <View 
+              <View
                 style={[
-                  tw`h-full bg-teal-400`, 
+                  tw`h-full bg-teal-400`,
                   { width: `${(tapCount / TARGET_TAPS) * 100}%` }
-                ]} 
+                ]}
               />
             </View>
             <Text style={tw`text-white text-xs font-black ml-3`}>{tapCount}/{TARGET_TAPS}</Text>
@@ -193,20 +197,20 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
 
           {/* Dashed Target Circle */}
           <View style={[
-            tw`absolute border-4 border-dashed border-white rounded-full`, 
+            tw`absolute border-4 border-dashed border-white rounded-full`,
             { width: width * 0.8, height: width * 0.8, opacity: 0.8 }
           ]} />
-          
+
           {/* Animated Doody inside */}
-          <Animated.View 
+          <Animated.View
             style={[
-              tw`w-64 h-64`, 
-              { 
+              tw`w-64 h-64`,
+              {
                 transform: [
                   { translateY: floatAnim },
                   { scale: hitScale },
                   { rotate: interpolatedRotate }
-                ] 
+                ]
               }
             ]}
           >
@@ -216,12 +220,12 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
 
         {/* Bottom Catch Controls */}
         <View style={[tw`flex-row justify-between items-center px-10 w-full pb-10 z-20`]}>
-          
+
           <TouchableOpacity onPress={onGoHome} style={tw`w-14 h-14 bg-white/80 rounded-2xl items-center justify-center shadow-sm`}>
             <HomeSvg width={24} height={24} color="#008C75" />
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             activeOpacity={0.8}
             onPress={handleTap}
             style={tw`mx-4`}

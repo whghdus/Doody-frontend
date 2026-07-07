@@ -53,7 +53,7 @@ interface OnboardingState {
   goToSignup: () => void;                      // Landing → Signup
   signup: (email: string, nickname: string) => void; // 회원가입 (온보딩으로 이동)
   login: (email: string, nickname: string) => void;  // 로그인 (홈으로 이동)
-  logout: () => void;
+  logout: () => Promise<void>;
   submitOnboarding: () => Promise<void>;
 }
 
@@ -112,36 +112,17 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 
   // Screen 4 → Screen 5
   nextQuestions: (answers) => {
-    // Calculate scores from mood answers
-    const scoreMap: Record<string, number> = {
-      // daily mood
-      '나쁘지 않아': 0,
-      '그냥 그래': 1,
-      '잘 모르겠어': 2,
-      '좀 지쳐 있어': 3,
-      // spending
-      '나쁘지 않아_spending': 0,
-      '잘 모르겠어_spending': 1,
-      '부담스러웠어': 2,
-      '불만 했어': 3,
-      // contact
-      '나쁘지 않아_contact': 0,
-      '잘 모르겠어_contact': 1,
-      '부담스러웠어_contact': 2,
-      '할만 했어': 0,
-    };
-
     // Simple score mapping: each answer maps to a score 0-3
-    const dailyScore = ['나쁘지 않아', '그냥 그래', '잘 모르겠어', '좀 지쳐 있어'].indexOf(answers.daily);
-    const spendingScore = ['나쁘지 않아', '잘 모르겠어', '부담스러웠어', '불만 했어'].indexOf(answers.spending);
-    const contactScore = ['할만 했어', '나쁘지 않아', '잘 모르겠어', '부담스러웠어'].indexOf(answers.contact);
+    const dailyScore = ['꽤 괜찮고 편안해', '평소랑 비슷해', '기운이 없고 무기력해', '너무 지치고 힘들어'].indexOf(answers.daily);
+    const spendingScore = ['잘 관리하고 있고 편안해', '크게 신경 쓰이지 않아', '마주하기 부담스럽고 걱정돼', '너무 막막하고 피하고 싶어'].indexOf(answers.spending);
+    const contactScore = ['마음 편하게 연락할 수 있어', '별 생각 없이 할 수 있어', '왠지 불편하고 망설여져', '너무 긴장되고 피하고 싶어'].indexOf(answers.contact);
 
     set({
       moodAnswers: answers,
       onboardingScores: {
-        rhythm: Math.max(0, dailyScore),
-        independence: Math.max(0, spendingScore),
-        connection: Math.max(0, contactScore),
+        rhythm: Math.max(0, 3 - dailyScore),
+        independence: Math.max(0, 3 - spendingScore),
+        connection: Math.max(0, 3 - contactScore),
       },
     });
     requestAnimationFrame(() => {
@@ -210,12 +191,20 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
       currentScreen: 8, // 로그인 후 바로 홈(8)
     }),
 
-  logout: () =>
+  logout: async () => {
+    try {
+      await AsyncStorage.removeItem('userEmail');
+      await AsyncStorage.removeItem('userNickname');
+      await authStorage.setToken(''); // Clear token from secure store
+    } catch (e) {
+      console.error('Failed to clear storage on logout', e);
+    }
     set({
       userEmail: null,
       userNickname: null,
       currentScreen: 0, // 랜딩으로 이동
-    }),
+    });
+  },
 
   submitOnboarding: async () => {
     const state = useOnboardingStore.getState();
@@ -229,8 +218,8 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
     else if (state.selectedCategory === 'unknown') gapAxis = 'UNKNOWN';
 
     // 2. goalChoice mapping
-    let goalChoice: 'AUTONOMY' | 'RHYTHM' | 'CONNECTION' = 'RHYTHM';
-    if (state.selectedGoal === 'g1') goalChoice = 'RHYTHM';
+    let goalChoice: 'AUTONOMY' | 'RHYTHM' | 'CONNECTION' = 'AUTONOMY';
+    if (state.selectedGoal === 'g1') goalChoice = 'AUTONOMY';
     else if (state.selectedGoal === 'g2') goalChoice = 'AUTONOMY';
     else if (state.selectedGoal === 'g3') goalChoice = 'CONNECTION';
 
@@ -240,24 +229,24 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
     else if (state.selectedGoal === 'g2') recommendedPeriod = '1m';
     else if (state.selectedGoal === 'g3') recommendedPeriod = '3m';
 
-    // 4. Choice mapping (1~5 scale based on mood answers)
-    let rhythmChoice = 2;
-    if (state.moodAnswers.daily === '나쁘지 않아') rhythmChoice = 5;
-    else if (state.moodAnswers.daily === '그냥 그래') rhythmChoice = 4;
-    else if (state.moodAnswers.daily === '잘 모르겠어') rhythmChoice = 3;
-    else if (state.moodAnswers.daily === '좀 지쳐 있어') rhythmChoice = 2;
+    // 4. Choice mapping (1~4 scale based on mood answers)
+    let rhythmChoice = 3;
+    if (state.moodAnswers.daily === '너무 지치고 힘들어') rhythmChoice = 1;
+    else if (state.moodAnswers.daily === '기운이 없고 무기력해') rhythmChoice = 2;
+    else if (state.moodAnswers.daily === '평소랑 비슷해') rhythmChoice = 3;
+    else if (state.moodAnswers.daily === '꽤 괜찮고 편안해') rhythmChoice = 4;
 
-    let autonomyChoice = 2;
-    if (state.moodAnswers.spending === '나쁘지 않아') autonomyChoice = 5;
-    else if (state.moodAnswers.spending === '불만 했어') autonomyChoice = 4;
-    else if (state.moodAnswers.spending === '잘 모르겠어') autonomyChoice = 3;
-    else if (state.moodAnswers.spending === '부담스러웠어') autonomyChoice = 2;
+    let autonomyChoice = 3;
+    if (state.moodAnswers.spending === '너무 막막하고 피하고 싶어') autonomyChoice = 1;
+    else if (state.moodAnswers.spending === '마주하기 부담스럽고 걱정돼') autonomyChoice = 2;
+    else if (state.moodAnswers.spending === '크게 신경 쓰이지 않아') autonomyChoice = 3;
+    else if (state.moodAnswers.spending === '잘 관리하고 있고 편안해') autonomyChoice = 4;
 
-    let connectionChoice = 2;
-    if (state.moodAnswers.contact === '나쁘지 않아') connectionChoice = 5;
-    else if (state.moodAnswers.contact === '할만 했어') connectionChoice = 4;
-    else if (state.moodAnswers.contact === '잘 모르겠어') connectionChoice = 3;
-    else if (state.moodAnswers.contact === '부담스러웠어') connectionChoice = 2;
+    let connectionChoice = 3;
+    if (state.moodAnswers.contact === '너무 긴장되고 피하고 싶어') connectionChoice = 1;
+    else if (state.moodAnswers.contact === '왠지 불편하고 망설여져') connectionChoice = 2;
+    else if (state.moodAnswers.contact === '별 생각 없이 할 수 있어') connectionChoice = 3;
+    else if (state.moodAnswers.contact === '마음 편하게 연락할 수 있어') connectionChoice = 4;
 
     // 5. Goal strings mapping
     const autonomyGoal = "돈과 소비를 피하지 않고 편안하게 마주하기";
@@ -265,8 +254,8 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 
     // 6. firstStepMission mapping
     let firstStepMission = "오늘 하루 딱 5분만 햇볕 아래 걷고 오기";
-    if (state.selectedGoal === 'g1') firstStepMission = "아침 알람 소리를 듣고 침대에 3분 동안 기지개 켜기";
-    else if (state.selectedGoal === 'g2') firstStepMission = "통장 잔액 한 번만 슥 보고 닫기";
+    if (state.selectedGoal === 'g1') firstStepMission = "통장 잔액 한 번만 슥 보고 닫기";
+    else if (state.selectedGoal === 'g2') firstStepMission = "내일 쓸 예산 5천원만 미리 정해두기";
     else if (state.selectedGoal === 'g3') firstStepMission = "가까운 청년센터 사이트 즐겨찾기(북마크) 해두기";
 
     const signupData = {

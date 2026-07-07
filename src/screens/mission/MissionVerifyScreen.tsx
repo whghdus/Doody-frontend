@@ -8,7 +8,7 @@ import {
   SafeAreaView,
   } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import * as ImagePicker from 'expo-image-picker';
 import Background from '../../components/common/Background';
 import DoodySvg from '../../assets/doody/Doody.webp';
@@ -97,7 +97,7 @@ export default function MissionVerifyScreen({
                 </View>
               </View>
               <Text style={tw`text-gray-900 text-base font-bold leading-relaxed`}>
-                미션을 마친 사진을 올려주세요.{"\n"}인증되면 회복 패스포트에 기록돼요.
+                미션을 마친 사진을 올려줘.{"\n"}인증되면 회복 패스포트에 기록돼.
               </Text>
               
               {/* Bubble pointer pointing down */}

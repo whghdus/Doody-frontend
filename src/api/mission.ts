@@ -11,6 +11,8 @@ export interface Mission {
   nextPath?: string;
   missionState?: string;
   restMessage?: string | null;
+  hasFallback?: boolean;
+  axis?: string;
 }
 
 export interface CompleteMissionResponse {
@@ -68,14 +70,14 @@ export const missionApi = {
       // Backend returned null missions (e.g., when the AI engine is not connected and templates are empty, or when gated)
       return {
         id: 'gated-mission-id',
-        title: data.restMessage || '오늘은 일상 루틴 관리에 집중해보세요!',
+        title: data.restMessage || '오늘은 일상 루틴 관리에 집중해봐!',
         points: 0,
         steps: ['아침 물 한잔 마시기', '오늘의 기분 기록하기'],
-        reason: '가끔은 추가 미션 없이 일상 패턴을 정돈하는 것도 큰 자립입니다.',
+        reason: '가끔은 추가 미션 없이 일상 패턴을 정돈하는 것도 큰 자립이야.',
         difficulty: 'easy',
         nextPath: data.nextPath || '',
         missionState: data.missionState || 'gated',
-        restMessage: data.restMessage || '오늘은 일상 루틴 관리에 집중해보세요!'
+        restMessage: data.restMessage || '오늘은 일상 루틴 관리에 집중해봐!'
       };
     }
     
@@ -94,7 +96,9 @@ export const missionApi = {
       difficulty: diffMap[activeMission.difficulty] || 'normal',
       nextPath: data.nextPath || '',
       missionState: data.missionState || 'active',
-      restMessage: data.restMessage
+      restMessage: data.restMessage,
+      hasFallback: data.fallback !== null,
+      axis: activeMission.axis,
     };
   },
 
@@ -131,7 +135,7 @@ export const missionApi = {
         title: difficulty === 'easy' ? '오늘 하루 지출 5,000원 이하로 유지하기' : '불필요한 구독 서비스 하나 해지하기',
         points: difficulty === 'easy' ? 50 : 100,
         steps,
-        reason: '목표에 맞는 새로운 미션입니다.',
+        reason: '목표에 맞는 새로운 미션이야.',
         difficulty
       };
     }

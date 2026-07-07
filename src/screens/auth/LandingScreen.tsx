@@ -1,7 +1,7 @@
 // src/screens/LandingScreen.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, Image } from 'react-native';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import Background from '../../components/common/Background';
 import { COLORS } from '../../constants/theme';
 import DoodyLogo from '../../assets/logos/doodyLogo.png';
@@ -17,10 +17,10 @@ export default function LandingScreen({ onSignupClick, onLoginClick }: LandingSc
       <SafeAreaView style={tw`flex-1 justify-center px-6`}>
         <View style={tw`flex-1 justify-center items-center`}>
           <Text style={tw`text-gray-900 text-2xl font-black text-center mb-2`}>
-            두디에 오신 것을 환영해요!
+            두디에 온 걸 환영해!
           </Text>
           <Text style={tw`text-gray-500 text-sm font-bold text-center`}>
-            나만의 작은 걸음, 자립의 시작을 함께할게요.
+            나만의 작은 걸음, 자립의 시작을 함께해.
           </Text>
         </View>
 

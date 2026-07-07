@@ -20,10 +20,11 @@ export interface AxisSummary {
 }
 
 export interface RecordItem {
-  id?: string;
+  recordId?: number;
   title?: string;
-  points?: number;
-  createdAt?: string;
+  reward?: number;
+  recordDate?: string;
+  recordedAt?: string;
   [key: string]: any;
 }
 

@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { COLORS } from '../../constants/theme';
 import type { MoodAnswers } from '../../store/useOnboardingStore';
 
@@ -36,17 +36,17 @@ export default function OnboardingQuestions({ onNext, onBack }: OnboardingQuesti
     {
       key: 'daily',
       title: '요즘 하루동안 기분이 어때?',
-      options: ['그냥 그래', '좀 지쳐 있어', '잘 모르겠어', '나쁘지 않아'],
+      options: ['너무 지치고 힘들어', '기운이 없고 무기력해', '평소랑 비슷해', '꽤 괜찮고 편안해'],
     },
     {
       key: 'spending',
       title: '최근 돈이나 소비 내역을 마주하는 게 어땠어?',
-      options: ['불만 했어', '부담스러웠어', '잘 모르겠어', '나쁘지 않아'],
+      options: ['너무 막막하고 피하고 싶어', '마주하기 부담스럽고 걱정돼', '크게 신경 쓰이지 않아', '잘 관리하고 있고 편안해'],
     },
     {
       key: 'contact',
       title: '연락하거나 문의해야 할 일이 생기면 어떤 기분이 들어?',
-      options: ['할만 했어', '부담스러웠어', '잘 모르겠어', '나쁘지 않아'],
+      options: ['너무 긴장되고 피하고 싶어', '왠지 불편하고 망설여져', '별 생각 없이 할 수 있어', '마음 편하게 연락할 수 있어'],
     },
   ];
 

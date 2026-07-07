@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import DoodySvg from '../../assets/doody/Doody.webp';
 import { COLORS } from '../../constants/theme';
 import { useOnboardingStore } from '../../store/useOnboardingStore';
@@ -58,7 +58,7 @@ export default function OnboardingHatch({ onFinish }: OnboardingHatchProps) {
                 console.error('Failed to submit onboarding', error);
                 Alert.alert(
                   '회원가입 실패',
-                  error.response?.data?.message || '회원가입 중 에러가 발생했습니다.'
+                  error.response?.data?.message || '회원가입 중 에러가 발생했어.'
                 );
               }
             }}

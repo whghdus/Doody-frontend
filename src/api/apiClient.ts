@@ -7,6 +7,11 @@ import { authStorage } from '../utils/authStorage';
 // - Android emulator uses 10.0.2.2 to access the host's localhost
 // - iOS simulator can use localhost
 const getBaseUrl = () => {
+  // On web, if deployed (or even local), route through '/api' so Vercel proxy handles HTTP backend
+  if (Platform.OS === 'web') {
+    return '/api';
+  }
+  
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
@@ -17,7 +22,7 @@ const getBaseUrl = () => {
 
 const apiClient = axios.create({
   baseURL: getBaseUrl(),
-  timeout: 10000,
+  timeout: 120000, // Increased to 60 seconds for heavy AI requests (like onboarding init)
   headers: {
     'Content-Type': 'application/json',
   },
@@ -45,20 +50,28 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Standard centralized error logging/handling
-    console.error('API Error Response:', error.response?.data || error.message);
-    
+    // Log detailed network error to Expo terminal
+    console.warn('===== API ERROR =====');
+    if (error.config) {
+      console.warn(`[REQUEST] ${error.config.method?.toUpperCase()} ${error.config.baseURL}${error.config.url}`);
+      console.warn(`[PAYLOAD]`, JSON.stringify(error.config.data, null, 2));
+    }
+    console.warn(`[RESPONSE STATUS]`, error.response?.status);
+    console.warn(`[RESPONSE DATA]`, JSON.stringify(error.response?.data, null, 2) || error.message);
+    console.warn('=====================');
+
     // Handle 401 Unauthorized (token expiration, logout user)
     if (error.response?.status === 401) {
       try {
         await authStorage.deleteToken();
         await AsyncStorage.removeItem('userEmail');
         await AsyncStorage.removeItem('userNickname');
+        await AsyncStorage.removeItem('doody-collection-storage');
       } catch (storageError) {
         console.error('Error clearing secure storage on 401', storageError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

@@ -2,7 +2,7 @@
 import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import TimeLineButtonPng from '../../assets/buttons/timeLineButton.png';
 import { COLORS, ACCESSIBILITY_LABEL } from '../../constants/theme';
 
@@ -94,7 +94,7 @@ function TimelineRecords({
             style={tw`relative flex-row pb-4`}
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel={`${item.dayTime} 기록: ${item.title}, 적립 포인트는 ${item.points}`}
+            accessibilityLabel={`${item.dayTime} 기록: ${item.title}, 적립 금 RWA 토큰은 ${item.points}`}
             accessibilityHint="상세 기록 모달을 엽니다."
           >
             {/* Left vertical timeline line and dot (Absolutely positioned to stretch across padding-bottom) */}
@@ -117,11 +117,11 @@ function TimelineRecords({
             <View style={tw`flex-1 ml-9 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm`}>
               <View style={tw`flex-row justify-between items-center mb-2`}>
                 <Text style={tw`text-gray-400 text-[11px] font-bold`}>{item.dayTime}</Text>
-                <View style={tw`bg-[${COLORS.primaryLight}] px-2 py-0.5 rounded-lg`}>
+                <View style={tw`bg-[${COLORS.primaryLight}] px-2 py-0.5 rounded-lg shrink-0 ml-2`}>
                   <Text style={tw`text-[${COLORS.primary}] text-[10px] font-black`}>{item.points}</Text>
                 </View>
               </View>
-              <Text style={tw`text-gray-900 text-sm font-bold`}>{item.title}</Text>
+              <Text style={tw`text-gray-900 text-sm font-bold`} numberOfLines={3}>{item.title}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -136,7 +136,7 @@ function TimelineRecords({
           accessible={true}
           accessibilityRole="button"
           accessibilityLabel="타임라인 기록 더 보기"
-          accessibilityHint="더 많은 기록을 불러와 아래에 덧붙입니다."
+          accessibilityHint="더 많은 기록을 불러와 아래에 덧붙이야."
         >
           <Text style={tw`text-[${COLORS.primary}] text-sm font-bold`}>더 보기</Text>
         </TouchableOpacity>

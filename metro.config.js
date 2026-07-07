@@ -14,6 +14,15 @@ module.exports = (() => {
     ...resolver,
     assetExts: resolver.assetExts.filter((ext) => ext !== 'svg'),
     sourceExts: [...resolver.sourceExts, 'svg'],
+    resolveRequest: (context, moduleName, platform) => {
+      if (platform === 'web' && moduleName === 'react-native-maps') {
+        return {
+          type: 'sourceFile',
+          filePath: require.resolve('./mock-maps.js'),
+        };
+      }
+      return context.resolveRequest(context, moduleName, platform);
+    },
   };
 
   return config;

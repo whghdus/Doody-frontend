@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import { COLORS } from '../../constants/theme';
 
 import DoodySvg from '../../assets/doody/Doody.webp';
@@ -12,6 +12,7 @@ import BrushDoodySvg from '../../assets/doody/brushDoody.webp';
 import HappyDoodySvg from '../../assets/doody/happyDoody.webp';
 import SadDoodySvg from '../../assets/doody/sadDoody.webp';
 import SmileDoodySvg from '../../assets/doody/smileDoody.webp';
+import ExplorationDoodySvg from '../../assets/doody/explorationDoody.webp';
 import SalaryDoodySvg from '../../assets/doody/salaryDoodt.webp';
 import GreenDoodySvg from '../../assets/doody/greenDoody.webp';
 import SimpleBackButton from '../../components/common/SimpleBackButton';
@@ -24,18 +25,20 @@ const DOODY_SVGS = [
   HappyDoodySvg, 
   SadDoodySvg, 
   SmileDoodySvg,
-  SalaryDoodySvg, // index 5
-  GreenDoodySvg   // index 6
+  ExplorationDoodySvg, // index 5
+  SalaryDoodySvg, // index 6
+  GreenDoodySvg   // index 7
 ];
 
 const DOODY_CATALOG = [
-  { name: '두디',       description: '기본 두디예요. 어디서나 나타나 조용히 곁에 있어 줘요. 가장 먼저 만날 수 있어요.' },
-  { name: '붓 두디',   description: '창의력이 넘치는 두디예요. 무언가를 만들고 기록하는 걸 좋아해요.' },
-  { name: '해피 두디', description: '항상 웃고 있는 두디예요. 미션을 완료할수록 더 자주 나타나요.' },
+  { name: '두디',       description: '기본 두디야. 어디서나 나타나 조용히 곁에 있어 줘요. 가장 먼저 만날 수 있어.' },
+  { name: '양치 두디',   description: '창의력이 넘치는 두디야. 무언가를 만들고 기록하는 걸 좋아해.' },
+  { name: '해피 두디', description: '항상 웃고 있는 두디야. 미션을 완료할수록 더 자주 나타나요.' },
   { name: '슬픈 두디', description: '오늘 좀 힘든 날에 나타나요. 옆에서 같이 있어줄게요.' },
-  { name: '스마일 두디', description: '따뜻한 미소를 가진 두디예요. 꾸준히 해낸 날 당신 곁으로 달려와요.' },
-  { name: '양복 두디',   description: '연결 온 단계를 해금하면 만날 수 있는 스마트한 두디예요. 연결을 통해 성장했어요.' },
-  { name: '그린 두디',   description: '자립 온 단계를 해금하면 만날 수 있는 희망찬 두디예요. 스스로 자립할 수 있어요.' },
+  { name: '스마일 두디', description: '따뜻한 미소를 가진 두디야. 꾸준히 해낸 날 당신 곁으로 달려와.' },
+  { name: '탐험 두디',   description: '낯선 곳을 탐험하는 걸 좋아하는 용감한 두디야. 주변을 둘러보면 찾을 수 있어.' },
+  { name: '회사 두디',   description: '연결 온 단계를 해금하면 만날 수 있는 스마트한 두디야. 연결을 통해 성장했어요.' },
+  { name: '하나 두디',   description: '자립 온 단계를 해금하면 만날 수 있는 희망찬 두디야. 스스로 자립할 수 있어.' },
 ];
 
 interface DoodyDetailScreenProps {
@@ -147,11 +150,23 @@ export default function DoodyDetailScreen({ doodyId, onBack }: DoodyDetailScreen
                   )}
                 </View>
                 <Text style={tw`text-gray-700 leading-relaxed`}>
-                  {detailData 
-                    ? `${detailData.earnedReason || '자립/연결 활동을 통해 얻은 소중한 두디예요.'}\n\n획득일: ${new Date(detailData.collectedAt).toLocaleDateString('ko-KR')}`
-                    : fallbackData
-                    ? `${fallbackData.earnedReason || '자립/연결 활동을 통해 얻은 소중한 두디예요.'}\n\n획득일: ${new Date(fallbackData.collectedAt).toLocaleDateString('ko-KR')}`
-                    : `지도에서 가까운 청년센터나 하나은행을 방문하고,\n카메라로 두디를 잡아보세요!`}
+                  {(() => {
+                    const data = detailData || fallbackData;
+                    if (!data) return `지도에서 가까운 청년센터나 하나은행을 방문하고,\n카메라로 두디를 잡아봐!`;
+                    
+                    const dt = new Date(data.collectedAt);
+                    const dateStr = dt.toLocaleDateString('ko-KR');
+                    const timeStr = dt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+                    
+                    let extraInfo = `\n\n획득일시: ${dateStr} ${timeStr}`;
+                    
+                    const isConnectionDoody = data.axis === 'connection' || String(doodyId) === '5';
+                    if (isConnectionDoody) {
+                      extraInfo += `\n획득 장소: 서울 청년센터`;
+                    }
+                    
+                    return `${data.earnedReason || '자립/연결 활동을 통해 얻은 소중한 두디야.'}${extraInfo}`;
+                  })()}
                 </Text>
               </>
             )}

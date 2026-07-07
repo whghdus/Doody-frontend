@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 import Background from '../../components/common/Background';
 import { COLORS } from '../../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -29,11 +29,11 @@ export default function SignupScreen({ onSignup, onBack }: SignupScreenProps) {
 
   const handleSignup = async () => {
     if (!nickname.trim()) {
-      Alert.alert('알림', '닉네임을 입력해주세요.');
+      Alert.alert('알림', '닉네임을 입력해줘.');
       return;
     }
     if (!email.trim() || !email.includes('@')) {
-      Alert.alert('알림', '올바른 이메일 주소를 입력해주세요.');
+      Alert.alert('알림', '올바른 이메일 주소를 입력해줘.');
       return;
     }
 
@@ -43,7 +43,7 @@ export default function SignupScreen({ onSignup, onBack }: SignupScreenProps) {
       onSignup(email.trim(), nickname.trim());
     } catch (error) {
       console.error('Failed to save email to AsyncStorage', error);
-      Alert.alert('오류', '회원가입 처리 중 문제가 발생했습니다.');
+      Alert.alert('오류', '회원가입 처리 중 문제가 발생했어.');
     }
   };
 
@@ -63,10 +63,10 @@ export default function SignupScreen({ onSignup, onBack }: SignupScreenProps) {
         >
           <View style={tw`mb-12 px-2 pt-8`}>
               <Text style={tw`text-gray-900 text-3xl font-black mb-3`}>
-                반가워요!{'\n'}이메일을 알려주세요.
+                반가워!{'\n'}이메일을 알려줘.
               </Text>
               <Text style={tw`text-gray-500 text-sm font-bold`}>
-                입력하신 이메일로 두디의 기록이 저장됩니다.
+                입력하신 이메일로 두디의 기록이 저장돼.
               </Text>
             </View>
 

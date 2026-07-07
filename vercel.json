@@ -1,0 +1,13 @@
+{
+  "outputDirectory": "dist",
+  "build": {
+    "env": {
+      "EXPO_PUBLIC_API_URL": "/api"
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "http://3.38.101.53:8080/api/$1" },
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
+  ]
+}

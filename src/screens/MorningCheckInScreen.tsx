@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import tw from 'twrnc';
+import tw from '../utils/tailwind';
 import CloseButton from '../components/common/CloseButton';
 
 // SVG Assets

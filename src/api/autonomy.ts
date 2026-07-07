@@ -115,7 +115,7 @@ export const autonomyApi = {
     const response = await apiClient.post<BackendAutonomyMissionRejectResponse>(
       `/users/${userId}/autonomy/missions/${missionId}/reject`,
       {
-        reasonText: rejectReason || '오늘은 이걸 하기 어려워요.',
+        reasonText: rejectReason || '오늘은 이걸 하기 어려워.',
       }
     );
     return response.data.result;

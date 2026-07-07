@@ -64,8 +64,8 @@ export interface BackendCaptureDoodyResponse {
 
 export const collectionPinApi = {
   getNearbyPins: async (lat: number, lng: number, radiusMeter: number = 2000): Promise<BackendCollectionPin[]> => {
-    // GET /api/collection-pins?lat=37.5665&lng=126.978&radiusMeter=2000
-    const response = await apiClient.get<BackendCollectionPinsResponse>('/collection-pins', {
+    // GET /api/collection/pins?lat=37.5665&lng=126.978&radiusMeter=2000
+    const response = await apiClient.get<BackendCollectionPinsResponse>('/collection/pins', {
       params: {
         lat,
         lng,

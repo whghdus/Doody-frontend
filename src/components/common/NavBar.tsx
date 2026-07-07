@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import tw from 'twrnc';
+import tw from '../../utils/tailwind';
 
 // Navbar SVG icons
 import HomeIcon from '../../assets/navbar/home.svg';
@@ -17,8 +17,12 @@ interface NavBarProps {
   onTabChange: (tab: TabType) => void;
 }
 
+export const NAV_BAR_HEIGHT = Platform.OS === 'web' ? 60 : 64;
+
 export default function NavBar({ activeTab, onTabChange }: NavBarProps) {
   const insets = useSafeAreaInsets();
+  // On web, insets.bottom is 0 — use a sensible default safe area for iPhone notch/home-indicator
+  const safeBottom = Platform.OS === 'web' ? 0 : insets.bottom;
 
   const tabs = [
     { id: 'home' as TabType, label: '홈', icon: HomeIcon },
@@ -30,9 +34,11 @@ export default function NavBar({ activeTab, onTabChange }: NavBarProps) {
   return (
     <View 
       style={[
-        tw`absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex-row justify-around pt-2 px-2 z-50`,
+        tw`absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex-row justify-around z-50`,
         {
-          paddingBottom: Platform.OS === 'ios' ? 32 : insets.bottom + 12,
+          paddingTop: Platform.OS === 'web' ? 8 : 8,
+          paddingBottom: Platform.OS === 'ios' ? Math.max(safeBottom, 20) : Platform.OS === 'web' ? 8 : safeBottom + 12,
+          height: Platform.OS === 'web' ? 60 : undefined,
         }
       ]}
     >

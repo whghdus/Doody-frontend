@@ -3,9 +3,48 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Doody</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png" />
+    <style>
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+      html {
+        /* 100dvh: accounts for collapsing browser chrome on mobile */
+        height: 100dvh;
+        height: -webkit-fill-available;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100dvh;
+        height: -webkit-fill-available;
+        overflow: hidden;
+        background: #ffffff;
+        /* Center the app container on desktop */
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+      }
+      #root {
+        width: 100%;
+        max-width: 480px;
+        height: 100dvh;
+        height: -webkit-fill-available;
+        overflow: hidden;
+        position: relative;
+        /* Subtle shadow to frame mobile app on desktop */
+        box-shadow: 0 0 40px rgba(0,0,0,0.12);
+      }
+      /* Prevent iOS Safari from auto-zooming on inputs with font-size < 16px */
+      input, textarea, select {
+        font-size: 16px !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
