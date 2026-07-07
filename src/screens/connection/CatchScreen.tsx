@@ -179,10 +179,9 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
       {/* UI Elements constrained by Safe Area */}
       <View style={[tw`flex-1`, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
 
-        {/* Center Target & Doody */}
-        <View style={tw`flex-1 justify-center items-center relative`}>
-          {/* HP / Tap Progress Bar */}
-          <View style={tw`absolute top-10 bg-black/50 px-4 py-2 rounded-full flex-row items-center border border-white/20 z-20`}>
+        {/* HP / Tap Progress Bar (Moved to very top) */}
+        <View style={tw`w-full items-center pt-8 z-30`}>
+          <View style={tw`bg-black/50 px-4 py-2 rounded-full flex-row items-center border border-white/20`}>
             <Text style={tw`text-white text-xs font-bold mr-3`}>두디 잡는 중</Text>
             <View style={tw`w-28 h-2.5 bg-white/20 rounded-full overflow-hidden`}>
               <View
@@ -194,7 +193,10 @@ export default function CatchScreen({ onSuccess, onGoHome, onGoToMap, doodyIndex
             </View>
             <Text style={tw`text-white text-xs font-black ml-3`}>{tapCount}/{TARGET_TAPS}</Text>
           </View>
+        </View>
 
+        {/* Center Target & Doody */}
+        <View style={tw`flex-1 justify-center items-center relative`}>
           {/* Dashed Target Circle */}
           <View style={[
             tw`absolute border-4 border-dashed border-white rounded-full`,
