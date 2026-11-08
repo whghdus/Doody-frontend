@@ -83,19 +83,22 @@ export default function IndependenceMapWidget({
 
         <View style={[tw`absolute inset-0`, { zIndex: 0 }]}>
           <Svg width={width} height={contentHeight}>
-            <Path
-              d={`
-                M ${ROADMAP_NODES[ROADMAP_NODES.length - 1].left} ${ROADMAP_NODES[ROADMAP_NODES.length - 1].top + 37}
-                ${[...ROADMAP_NODES].reverse().slice(1).map(n => `L ${n.left} ${n.top + 37}`).join(' ')}
-                L ${ROADMAP_NODES[0].left + 40} ${ROADMAP_NODES[0].top + 120}
-              `}
-              stroke="#008C75"
-              strokeWidth="6"
-              strokeDasharray="15, 15"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            {/* The path needs at least one node (the API may return none) */}
+            {ROADMAP_NODES.length > 0 && (
+              <Path
+                d={`
+                  M ${ROADMAP_NODES[ROADMAP_NODES.length - 1].left} ${ROADMAP_NODES[ROADMAP_NODES.length - 1].top + 37}
+                  ${[...ROADMAP_NODES].reverse().slice(1).map(n => `L ${n.left} ${n.top + 37}`).join(' ')}
+                  L ${ROADMAP_NODES[0].left + 40} ${ROADMAP_NODES[0].top + 120}
+                `}
+                stroke="#008C75"
+                strokeWidth="6"
+                strokeDasharray="15, 15"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
           </Svg>
         </View>
 

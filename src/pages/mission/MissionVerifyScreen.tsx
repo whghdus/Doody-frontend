@@ -43,7 +43,7 @@ export default function MissionVerifyScreen({
         }
       }
     } catch (error) {
-      console.log('Gallery picker error, falling back to mock image:', error);
+      console.warn('Gallery picker error:', error);
     }
   };
 
@@ -154,7 +154,7 @@ export default function MissionVerifyScreen({
                   📸 업로드한 사진
                 </Text>
                 
-                {/* Image container displaying the picked/mock image */}
+                {/* Image container displaying the picked image */}
                 <View style={tw`w-full h-80 bg-gray-100 rounded-[24px] mb-6 overflow-hidden shadow-inner justify-center items-center`}>
                   <Image 
                     source={{ uri: imageUri }} 

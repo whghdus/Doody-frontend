@@ -87,26 +87,6 @@ export const autonomyApi = {
   },
 
   getMission: async (missionId: string): Promise<AutonomyMissionDetailResponse> => {
-    // --- MOCK FOR TEST ---
-    if (missionId === 'a06_future_capture_1') {
-      return {
-        missionId: 'a06_future_capture_1',
-        axis: 'AUTONOMY',
-        stage: 1,
-        title: '마음에 드는 공고 찍어서 올리기',
-        description: '내가 원하는 일자리나 지원 사업의 공고를 찾아서 찍어보자.',
-        reason: '관심 있는 분야의 공고를 찾아보는 것도 큰 시작이야.',
-        howTo: ['마음에 드는 채용 공고나 지원 사업 공고를 찾아 사진 찍기', '사진을 업로드하여 완료하기'],
-        goalTags: ['정보탐색', '자립'],
-        missionType: 'NORMAL',
-        requiredEvidenceCount: 1,
-        reward: { hanaMoney: 50 },
-        externalUrl: null,
-        fallbackMissionId: null,
-        isFallback: false,
-      };
-    }
-    // ----------------------
     const userId = await authStorage.getToken();
     if (!userId) throw new Error('User ID is not found. Please log in.');
 
@@ -118,16 +98,6 @@ export const autonomyApi = {
   },
 
   startMission: async (missionId: string): Promise<AutonomyMissionStartResult> => {
-    // --- MOCK FOR TEST ---
-    if (missionId === 'a06_future_capture_1') {
-      return {
-        missionLogId: 999,
-        missionId: 'a06_future_capture_1',
-        actionType: 'START',
-        startedAt: new Date().toISOString(),
-      };
-    }
-    // ----------------------
     const userId = await authStorage.getToken();
     if (!userId) throw new Error('User ID is not found. Please log in.');
 
@@ -153,25 +123,6 @@ export const autonomyApi = {
   },
 
   completeMission: async (missionId: string): Promise<AutonomyMissionCompleteResult> => {
-    // --- MOCK FOR TEST ---
-    if (missionId === 'a06_future_capture_1') {
-      return {
-        missionLogId: 999,
-        missionId: 'a06_future_capture_1',
-        updatedAri: { rhythm: 1, autonomy: 1, connection: 1 },
-        appliedDelta: { rhythm: 1, autonomy: 1, connection: 1 },
-        eta: 0,
-        reward: { hanaMoney: 50 },
-        completed: true,
-        signatureAvailable: false,
-        signatureCompleted: false,
-        contactUnlocked: false,
-        collectedDudy: [],
-        unlockedContacts: [],
-        message: '미션 성공'
-      };
-    }
-    // ----------------------
     const userId = await authStorage.getToken();
     if (!userId) throw new Error('User ID is not found. Please log in.');
 
@@ -186,11 +137,6 @@ export const autonomyApi = {
     missionId: string,
     evidenceData: { photoUri?: string; fileUrl?: string; contentType?: string }
   ): Promise<AutonomyMissionEvidenceResult> => {
-    // --- MOCK FOR TEST ---
-    if (missionId === 'a06_future_capture_1') {
-      return { fileUrl: evidenceData.photoUri };
-    }
-    // ----------------------
     const userId = await authStorage.getToken();
     if (!userId) throw new Error('User ID is not found. Please log in.');
 

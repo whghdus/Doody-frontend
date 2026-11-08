@@ -12,7 +12,6 @@ import DoodyLogo from '@/shared/assets/logos/doodyLogo.png';
 import { missionApi } from '@/shared/api/mission';
 import { autonomyApi, AutonomyNode, AutonomyMissionDetailResponse } from '@/shared/api/autonomy';
 import { hanaFinanceApi } from '@/shared/api/hanaFinance';
-import { userApi } from '@/shared/api/user';
 import { useCollectionStore } from '@/entities/useCollectionStore';
 import Background from '@/shared/ui/Background';
 
@@ -54,27 +53,18 @@ export default function IndependenceScreen({
 
   const fetchStepData = useCallback(async () => {
     try {
-      // 1. Fetch user profile to get completed mission count
-      const profile = await userApi.getProfile();
-      const actualCurrentStep = profile.missionCount + 1;
+      const [pathData, todayMission] = await Promise.all([
+        autonomyApi.getPath(),
+        missionApi.getTodayMission(),
+      ]);
 
-      // 2. Fetch today's mission (to act as the CURRENT node)
-      const todayMission = await missionApi.getTodayMission();
-
-      setCurrentStep(actualCurrentStep);
-      setPathTitle('오늘의 미션 로드맵');
-
-      // Store the today mission as the CURRENT node
-      setNodes([{
-        step: actualCurrentStep,
-        status: 'CURRENT',
-        missionId: 'a06_future_capture_1', // HARDCODED for test
-        title: '마음에 드는 공고 이미지 찍어서 올리기' // HARDCODED for test
-      }]);
+      setCurrentStep(pathData.currentStep > 0 ? pathData.currentStep : 1);
+      setPathTitle(pathData.title || '');
+      setNodes([...(pathData.nodes || [])].sort((x, y) => x.step - y.step));
 
       const today = new Date().toISOString().split('T')[0];
       const localCompletedDate = await AsyncStorage.getItem('daily_mission_completed_date');
-      setTodayAvailable(localCompletedDate !== today);
+      setTodayAvailable(pathData.todayAvailable !== false && localCompletedDate !== today);
 
       if (todayMission.missionState?.toLowerCase() === 'gated') {
         setIsResting(true);
@@ -82,7 +72,7 @@ export default function IndependenceScreen({
         setIsResting(false);
       }
     } catch (e) {
-      console.error('Failed to fetch today mission for background', e);
+      console.error('Failed to fetch autonomy path', e);
     }
   }, []);
 
@@ -96,27 +86,7 @@ export default function IndependenceScreen({
     }
   }, [showUnlock, showRoadmapModal, showVerifyScreen, onToggleNavBar]);
 
-  // Use hardcoded mock data for testing (Stage 1 to 6)
-  const MOCK_ROADMAP = [
-    { step: 1, missionId: 'a01_feeling_word', title: '마음에 드는 공고 이미지 찍어서 올리기' },
-    { step: 2, missionId: 'a02_positive_memory', title: '마음에 드는 공고 이미지 찍어서 올리기' },
-    { step: 3, missionId: 'a03_finance_touch', title: '마음에 드는 공고 이미지 찍어서 올리기' },
-    { step: 4, missionId: 'a04_balance_glance', title: '마음에 드는 공고 이미지 찍어서 올리기' },
-    { step: 5, missionId: 'a05_spend_observe', title: '마음에 드는 공고 이미지 찍어서 올리기' },
-    { step: 6, missionId: 'a06_future_capture_3', title: '마음에 드는 공고 이미지 찍어서 올리기' },
-  ];
-
-  const nodesToUse: AutonomyNode[] = MOCK_ROADMAP.map((item) => {
-    let status: 'COMPLETED' | 'CURRENT' | 'LOCKED' = 'LOCKED';
-    if (item.step < currentStep) status = 'COMPLETED';
-    else if (item.step === currentStep) status = 'CURRENT';
-    return {
-      step: item.step,
-      missionId: item.missionId,
-      title: item.title,
-      status,
-    };
-  });
+  const nodesToUse: AutonomyNode[] = nodes;
 
   const activeIndex = nodesToUse.findIndex(n => n.status !== 'COMPLETED');
 
@@ -130,31 +100,10 @@ export default function IndependenceScreen({
     const currentNode = activeIndex >= 0 ? nodesToUse[activeIndex] : undefined;
     const missionId = currentNode?.missionId;
 
-    if (!missionId) return; // Removed startsWith('mock-id') block so mock missions can open too
+    if (!missionId) return;
 
     try {
-      // Mocking the backend for test - ALWAYS SHOW THIS MISSION
-      const detail: AutonomyMissionDetailResponse = {
-        missionId: 'a06_future_capture_1',
-        axis: 'autonomy',
-        stage: 1,
-        title: '마음에 드는 공고 이미지 찍어서 올리기',
-        description: '관심 있는 기업의 공고를 미리 확인해보면, 앞으로 어떤 준비를 해야 할지 감을 잡을 수 있어요.',
-        reason: '어떤 직무들이 있는지 가볍게 구경해봐요!',
-        howTo: [
-          '채용 사이트(사람인, 잡코리아 등)에 접속해요.',
-          '관심 있는 직무나 기업의 공고를 찾아요.',
-          '마음에 드는 공고를 캡처해서 올려주세요.',
-        ],
-        missionType: 'NORMAL',
-        reward: { hanaMoney: 30 },
-        goalTags: [],
-        requiredEvidenceCount: 1,
-        externalUrl: null,
-        fallbackMissionId: null,
-        isFallback: false,
-      };
-      
+      const detail = await autonomyApi.getMission(missionId);
       setCurrentMissionDetail(detail);
       setShowMissionModal(true);
     } catch (error) {
@@ -173,31 +122,9 @@ export default function IndependenceScreen({
         const currentNode = activeIndex >= 0 ? nodesToUse[activeIndex] : undefined;
         const originalMissionId = currentNode?.missionId;
         if (originalMissionId) {
-          // Bypassing API for mock test
-          // const rejectRes = await autonomyApi.rejectMission(originalMissionId, '쉬운 미션으로 변경');
-          const rejectRes = {
-            candidates: [{
-               missionId: 'a06_future_capture_1',
-               axis: 'autonomy',
-               stage: 1,
-               title: '마음에 드는 공고 이미지 찍어서 올리기',
-               description: '관심 있는 기업의 공고를 미리 확인해보면...',
-               reason: '어떤 직무들이 있는지 가볍게 구경해봐요!',
-               howTo: [
-                 '채용 사이트(사람인, 잡코리아 등)에 접속해요.',
-                 '관심 있는 직무나 기업의 공고를 찾아요.',
-                 '마음에 드는 공고를 캡처해서 올려주세요.',
-               ],
-               missionType: 'NORMAL',
-               requiredCount: 1,
-               reward: { hanaMoney: 30 },
-               fallbackMissionId: null,
-               isFallback: false
-            }],
-            message: '조금 더 쉬운 걸음으로 바꿔볼게 (Mock)'
-          };
+          const rejectRes = await autonomyApi.rejectMission(originalMissionId, '쉬운 미션으로 변경');
           if (rejectRes.candidates && rejectRes.candidates.length > 0) {
-            setRejectCandidate(rejectRes.candidates[0] as any);
+            setRejectCandidate(rejectRes.candidates[0]);
             setRejectMessage(rejectRes.message || '조금 더 쉬운 걸음으로 바꿔볼게');
           }
         }
@@ -244,7 +171,7 @@ export default function IndependenceScreen({
     const currentNode = activeIndex >= 0 ? nodesToUse[activeIndex] : undefined;
     const missionId = currentMissionDetail?.missionId || currentNode?.missionId;
 
-    if (!missionId || missionId.startsWith('mock-id')) return;
+    if (!missionId) return;
 
     try {
       await autonomyApi.startMission(missionId);
@@ -252,7 +179,8 @@ export default function IndependenceScreen({
       console.error('Failed to start autonomy mission', error);
     }
 
-    if (missionId === 'a06_future_capture_1') {
+    // Missions that need photo evidence go through the verify screen first.
+    if ((currentMissionDetail?.requiredEvidenceCount ?? 0) > 0) {
       setTimeout(() => setShowVerifyScreen(true), 150);
     } else {
       await handleCompleteMissionProcess(missionId);
@@ -281,28 +209,7 @@ export default function IndependenceScreen({
         });
         setTimeout(() => setShowMissionModal(true), 150);
       } else if (currentMissionDetail?.fallbackMissionId) {
-        // Bypassing API for mock test
-        // const detail = await autonomyApi.getMission(currentMissionDetail.fallbackMissionId);
-        const detail: AutonomyMissionDetailResponse = {
-          missionId: 'a06_future_capture_1',
-          axis: 'autonomy',
-          stage: 1,
-          title: '마음에 드는 공고 이미지 찍어서 올리기',
-          description: '관심 있는 기업의 공고를 미리 확인해보면...',
-          reason: '어떤 직무들이 있는지 가볍게 구경해봐요!',
-          howTo: [
-            '채용 사이트(사람인, 잡코리아 등)에 접속해요.',
-            '관심 있는 직무나 기업의 공고를 찾아요.',
-            '마음에 드는 공고를 캡처해서 올려주세요.',
-          ],
-          missionType: 'NORMAL',
-          reward: { hanaMoney: 30 },
-          goalTags: [],
-          requiredEvidenceCount: 1,
-          externalUrl: null,
-          fallbackMissionId: null,
-          isFallback: false,
-        };
+        const detail = await autonomyApi.getMission(currentMissionDetail.fallbackMissionId);
         setCurrentMissionDetail(detail);
         setTimeout(() => setShowMissionModal(true), 150);
       } else {

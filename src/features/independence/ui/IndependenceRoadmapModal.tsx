@@ -1,4 +1,3 @@
-// src/screens/independence/IndependenceRoadmapModal.tsx
 import React from 'react';
 import {
   Modal,
@@ -8,29 +7,29 @@ import {
   ScrollView,
 } from 'react-native';
 import tw from '@/shared/lib/tailwind';
+import { useOnboardingStore } from '@/entities/useOnboardingStore';
+import type { AutonomyNode } from '@/shared/api/autonomy';
 
 interface IndependenceRoadmapModalProps {
   visible: boolean;
   onClose: () => void;
-  // Props are kept for compatibility but not used in this mock version
   currentStep?: number;
-  nodes?: any[];
+  nodes?: AutonomyNode[];
   pathTitle?: string;
 }
 
 export default function IndependenceRoadmapModal({
   visible,
   onClose,
+  nodes = [],
+  pathTitle,
 }: IndependenceRoadmapModalProps) {
+  const userNickname = useOnboardingStore((state) => state.userNickname) || '나';
 
-  // Hardcoded mock data for testing
-  const MOCK_TAGS = ['IBK 기업 은행', '코레일', '한국 주택 금융 공사'];
-
-  const MOCK_STEPS = [
-    { title: '마음에 드는 공고 이미지 찍어서 올리기' },
-    { title: '마음에 드는 공고 이미지 찍어서 올리기' },
-    { title: '마음에 드는 공고 이미지 찍어서 올리기' },
-  ];
+  // Path title from the backend (the user's goal) shown as the "what Doody saw" tag.
+  const tags = pathTitle ? [pathTitle] : [];
+  // Upcoming steps of the autonomy path, a few at a time.
+  const upcomingSteps = nodes.filter((n) => n.status !== 'COMPLETED').slice(0, 3);
 
   return (
     <Modal
@@ -46,7 +45,7 @@ export default function IndependenceRoadmapModal({
           <View style={tw`mb-4`}>
             <Text style={tw`text-gray-400 text-sm font-bold mb-1`}>내가 가고 싶은 방향</Text>
             <Text style={tw`text-gray-900 text-[22px] font-black leading-snug tracking-tight`}>
-              두디가 추천하는{'\n'}지훈이가 나아가야 하는 길
+              두디가 추천하는{'\n'}{userNickname}이가 나아가야 하는 길
             </Text>
           </View>
 
@@ -57,7 +56,7 @@ export default function IndependenceRoadmapModal({
           <View style={tw`mb-5`}>
             <Text style={tw`text-gray-400 text-sm font-bold mb-3`}>두디가 옆에서 본 것</Text>
             <View style={tw`flex-row flex-wrap gap-1.5`}>
-              {MOCK_TAGS.map((tag, index) => (
+              {tags.map((tag, index) => (
                 <View key={index} style={tw`bg-[#008C75] rounded-full px-2.5 py-1.5`}>
                   <Text style={tw`text-white text-xs font-bold`}>{tag}</Text>
                 </View>
@@ -75,7 +74,7 @@ export default function IndependenceRoadmapModal({
 
             {/* List */}
             <View style={tw`gap-y-3`}>
-              {MOCK_STEPS.map((node, index) => (
+              {upcomingSteps.map((node, index) => (
                 <View
                   key={index}
                   style={tw`bg-[#EEF7F5] rounded-2xl p-4 flex-row items-center`}

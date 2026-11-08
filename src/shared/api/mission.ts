@@ -1,4 +1,3 @@
-import { DEMO_MODE } from '@/shared/config/demo';
 import apiClient from './apiClient';
 import { authStorage } from '@/shared/lib/authStorage';
 
@@ -61,23 +60,6 @@ export interface BackendTodayMissionResponse {
 
 export const missionApi = {
   getTodayMission: async (): Promise<Mission> => {
-    // Demo data used for the contest presentation; set EXPO_PUBLIC_DEMO_MODE=false to hit the real API.
-    if (DEMO_MODE) return {
-      id: 'a06_future_capture_1',
-      title: '마음에 드는 공고 찍어서 올리기',
-      points: 50,
-      steps: ['마음에 드는 채용 공고나 지원 사업 공고를 찾아 사진 찍기', '사진을 업로드하여 완료하기'],
-      reason: '관심 있는 분야의 공고를 찾아보는 것도 큰 시작이야.',
-      difficulty: 'normal',
-      nextPath: '',
-      missionState: 'active',
-      restMessage: '',
-      hasFallback: false,
-      axis: 'autonomy',
-      vRhythm: 0,
-      completable: true,
-    };
-    // ----------------------
     const userId = await authStorage.getToken();
     if (!userId) {
       throw new Error('User ID is not found. Please log in.');
