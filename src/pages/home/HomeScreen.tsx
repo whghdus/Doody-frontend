@@ -18,10 +18,26 @@ import HomeCheckInWidget from '@/widgets/home/ui/HomeCheckInWidget';
 import HomeQuizWidget from '@/widgets/home/ui/HomeQuizWidget';
 import ActiveMissionWidget from '@/widgets/mission/ui/ActiveMissionWidget';
 import NightCheckInScreen from '@/pages/home/NightCheckInScreen';
+import type { CompositeNavigationProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { HomeStackParamList, MainTabParamList } from '@/app/navigation/types';
+
+type HomeScreenNavigation = CompositeNavigationProp<
+  NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
+
+const TAB_ROUTES: Record<string, keyof MainTabParamList> = {
+  home: 'Home',
+  independence: 'Independence',
+  connection: 'Connection',
+  report: 'Report',
+};
 
 interface HomeScreenProps {
   onRestartOnboarding: () => void;
-  navigation?: any;
+  navigation?: HomeScreenNavigation;
 }
 
 export default function HomeScreen({ onRestartOnboarding, navigation }: HomeScreenProps) {
@@ -171,8 +187,8 @@ export default function HomeScreen({ onRestartOnboarding, navigation }: HomeScre
               onNavigateTab={(tab) => {
                 if (tab === 'report_collection' && navigation) {
                   navigation.navigate('Collection');
-                } else if (navigation) {
-                  navigation.navigate(tab.charAt(0).toUpperCase() + tab.slice(1));
+                } else if (navigation && TAB_ROUTES[tab]) {
+                  navigation.navigate(TAB_ROUTES[tab]);
                 }
               }}
               onRestToday={() => {

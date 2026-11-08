@@ -46,29 +46,44 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Called after a 401 clears the session (e.g. App resets navigation to Landing).
+// Registered from the app layer so shared/ does not depend on navigation.
+let unauthorizedHandler: (() => void) | null = null;
+let isHandlingUnauthorized = false;
+
+export const setUnauthorizedHandler = (handler: (() => void) | null) => {
+  unauthorizedHandler = handler;
+};
+
 // Response Interceptor: Common Error Handling
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Log detailed network error to Expo terminal
-    console.warn('===== API ERROR =====');
-    if (error.config) {
-      console.warn(`[REQUEST] ${error.config.method?.toUpperCase()} ${error.config.baseURL}${error.config.url}`);
-      console.warn(`[PAYLOAD]`, JSON.stringify(error.config.data, null, 2));
+    // Detailed request/response dump for debugging with the backend; dev builds only
+    // so payloads (which can contain personal data) never reach production logs.
+    if (__DEV__) {
+      console.warn('===== API ERROR =====');
+      if (error.config) {
+        console.warn(`[REQUEST] ${error.config.method?.toUpperCase()} ${error.config.baseURL}${error.config.url}`);
+        console.warn(`[PAYLOAD]`, JSON.stringify(error.config.data, null, 2));
+      }
+      console.warn(`[RESPONSE STATUS]`, error.response?.status);
+      console.warn(`[RESPONSE DATA]`, JSON.stringify(error.response?.data, null, 2) || error.message);
+      console.warn('=====================');
     }
-    console.warn(`[RESPONSE STATUS]`, error.response?.status);
-    console.warn(`[RESPONSE DATA]`, JSON.stringify(error.response?.data, null, 2) || error.message);
-    console.warn('=====================');
 
-    // Handle 401 Unauthorized (token expiration, logout user)
-    if (error.response?.status === 401) {
+    // Handle 401 Unauthorized: clear the session, then send the user back to the entry screen.
+    // Several requests can fail at once, so only the first one triggers the redirect.
+    if (error.response?.status === 401 && !isHandlingUnauthorized) {
+      isHandlingUnauthorized = true;
       try {
         await authStorage.deleteToken();
-        await AsyncStorage.removeItem('userEmail');
-        await AsyncStorage.removeItem('userNickname');
-        await AsyncStorage.removeItem('doody-collection-storage');
+        await AsyncStorage.multiRemove(['userEmail', 'userNickname', 'doody-collection-storage']);
       } catch (storageError) {
         console.error('Error clearing secure storage on 401', storageError);
+      } finally {
+        unauthorizedHandler?.();
+        isHandlingUnauthorized = false;
       }
     }
 

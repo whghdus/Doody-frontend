@@ -17,9 +17,10 @@ import ReportScreen from '@/pages/report/ReportScreen';
 import DoodyCollectionScreen from '@/pages/report/DoodyCollectionScreen';
 import DoodyDetailScreen from '@/pages/report/DoodyDetailScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { HomeStackParamList, MainTabParamList } from './types';
 
-const Tab = createBottomTabNavigator();
-const HomeStack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator<MainTabParamList>();
+const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 
 function HomeStackScreen() {
   return (
@@ -36,9 +37,9 @@ function HomeStackScreen() {
         )}
       </HomeStack.Screen>
       <HomeStack.Screen name="DoodyDetail">
-        {(props: any) => (
-          <DoodyDetailScreen 
-            doodyId={props.route.params?.doodyId}
+        {(props) => (
+          <DoodyDetailScreen
+            doodyId={props.route.params.doodyId}
             onBack={() => props.navigation.goBack()}
           />
         )}
@@ -100,7 +101,7 @@ export default function BottomTabNavigator() {
       />
       <Tab.Screen
         name="Report"
-        children={(props: any) => <ReportScreen {...props} onBack={() => props.navigation.navigate('Home')} onDoodyClick={() => {}} />}
+        children={(props) => <ReportScreen {...props} onBack={() => props.navigation.navigate('Home')} onDoodyClick={() => {}} />}
         options={{ tabBarLabel: '리포트' }}
       />
     </Tab.Navigator>

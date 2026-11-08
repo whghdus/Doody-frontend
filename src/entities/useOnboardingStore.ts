@@ -198,7 +198,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
     try {
       await AsyncStorage.removeItem('userEmail');
       await AsyncStorage.removeItem('userNickname');
-      await authStorage.setToken(''); // Clear token from secure store
+      await authStorage.deleteToken();
     } catch (e) {
       console.error('Failed to clear storage on logout', e);
     }
