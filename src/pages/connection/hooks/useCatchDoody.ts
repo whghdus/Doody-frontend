@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { collectionPinApi } from '@/shared/api/collectionPin';
 import { useCollectionStore, mapDoodyIdToIndex } from '@/entities/useCollectionStore';
+import type { Institution, CaptureResult } from '../model';
 
 export function useCatchDoody() {
   const [selectedDoodyIndex, setSelectedDoodyIndex] = useState<number>(0);
@@ -17,17 +18,17 @@ export function useCatchDoody() {
   };
 
   const executeCatch = async (
-    institutions: any[],
+    institutions: Institution[],
     location: Location.LocationObject | null
   ) => {
     try {
       if (selectedPinId && location) {
         const pin = institutions.find((p) => p.id === selectedPinId);
-        let captureResult: any = null;
+        let captureResult: CaptureResult;
 
         if (Platform.OS === 'web') {
           captureResult = {
-            collectedDudy: [{ id: 'exploration-web', title: '탐험 두디' }],
+            collectedDudy: [{ id: 'exploration-web', tier: 'COMMON', axis: 'CONNECTION', earnedReason: '탐험 두디' }],
             reward: { hanaMoney: 30 }
           };
         } else {
@@ -43,7 +44,7 @@ export function useCatchDoody() {
 
         if (captureResult.collectedDudy && captureResult.collectedDudy.length > 0) {
           const { unlockDoody } = useCollectionStore.getState();
-          captureResult.collectedDudy.forEach((dudy: any) => {
+          captureResult.collectedDudy.forEach((dudy) => {
             unlockDoody(mapDoodyIdToIndex(dudy.id));
           });
 
@@ -51,7 +52,7 @@ export function useCatchDoody() {
             const localHistoryStr = await AsyncStorage.getItem('local_connection_history');
             const localHistory = localHistoryStr ? JSON.parse(localHistoryStr) : [];
             
-            captureResult.collectedDudy.forEach((_dudy: any) => {
+            captureResult.collectedDudy.forEach(() => {
               localHistory.push({
                 recordId: Date.now() + Math.random(),
                 recordedAt: new Date().toISOString(),

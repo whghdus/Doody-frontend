@@ -2,9 +2,10 @@ import { useState, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { collectionPinApi } from '@/shared/api/collectionPin';
 import { mapDoodyIdToIndex } from '@/entities/useCollectionStore';
+import type { Institution } from '../model';
 
 export function useInstitutions() {
-  const [institutions, setInstitutions] = useState<any[]>([]);
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
 
   const fetchInstitutions = useCallback(async (lat: number, lon: number) => {
     if (Platform.OS === 'web') {
@@ -30,7 +31,7 @@ export function useInstitutions() {
         console.log(`📌 Doody IDs returned:`, pins.map(p => p.doodyId).join(', '));
       }
 
-      const mapped = pins.map((pin) => {
+      const mapped = pins.map((pin): Institution => {
         return {
           id: pin.pinId,
           lat: pin.lat,

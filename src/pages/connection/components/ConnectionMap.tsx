@@ -13,12 +13,13 @@ import SmileDoodySvg from '@/shared/assets/doody/smileDoody.webp';
 import ExplorationDoodySvg from '@/shared/assets/doody/explorationDoody.webp';
 import SalaryDoodySvg from '@/shared/assets/doody/salaryDoodt.webp';
 import GreenDoodySvg from '@/shared/assets/doody/greenDoody.webp';
+import type { Institution } from '../model';
 
 const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDoodySvg, ExplorationDoodySvg, SalaryDoodySvg, GreenDoodySvg];
 
 interface ConnectionMapProps {
   region: Region | null;
-  institutions: any[];
+  institutions: Institution[];
   onCatchDoody: (id: string, index: number) => void;
   onRegionChangeComplete: (region: Region) => void;
 }

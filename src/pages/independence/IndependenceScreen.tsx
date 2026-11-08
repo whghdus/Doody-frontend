@@ -148,6 +148,10 @@ export default function IndependenceScreen({
         ],
         missionType: 'NORMAL',
         reward: { hanaMoney: 30 },
+        goalTags: [],
+        requiredEvidenceCount: 1,
+        externalUrl: null,
+        fallbackMissionId: null,
         isFallback: false,
       };
       
@@ -293,6 +297,10 @@ export default function IndependenceScreen({
           ],
           missionType: 'NORMAL',
           reward: { hanaMoney: 30 },
+          goalTags: [],
+          requiredEvidenceCount: 1,
+          externalUrl: null,
+          fallbackMissionId: null,
           isFallback: false,
         };
         setCurrentMissionDetail(detail);

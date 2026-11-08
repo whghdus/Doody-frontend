@@ -1,3 +1,4 @@
+import { DEMO_MODE } from '@/shared/config/demo';
 import apiClient from './apiClient';
 import { authStorage } from '@/shared/lib/authStorage';
 
@@ -60,8 +61,8 @@ export interface BackendTodayMissionResponse {
 
 export const missionApi = {
   getTodayMission: async (): Promise<Mission> => {
-    // --- MOCK FOR TEST ---
-    return {
+    // Demo data used for the contest presentation; set EXPO_PUBLIC_DEMO_MODE=false to hit the real API.
+    if (DEMO_MODE) return {
       id: 'a06_future_capture_1',
       title: '마음에 드는 공고 찍어서 올리기',
       points: 50,
