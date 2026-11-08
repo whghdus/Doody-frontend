@@ -3,31 +3,35 @@ import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import tw from './utils/tailwind';
-import { useOnboardingStore } from './store/useOnboardingStore';
-import Background from './components/common/Background';
+import tw from '@/shared/lib/tailwind';
+import { useOnboardingStore } from '@/entities/useOnboardingStore';
+import Background from '@/shared/ui/Background';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authStorage } from '@/shared/lib/authStorage';
+import { setUnauthorizedHandler } from '@/shared/api/apiClient';
+import type { RootStackParamList } from './app/navigation/types';
 
 // Auth screens
-import LandingScreen from './screens/auth/LandingScreen';
-import SignupScreen from './screens/auth/SignupScreen';
-import LoginScreen from './screens/auth/LoginScreen';
+import LandingScreen from '@/pages/auth/LandingScreen';
+import SignupScreen from '@/pages/auth/SignupScreen';
+import LoginScreen from '@/pages/auth/LoginScreen';
 
 // Onboarding screens
-import OnboardingScreen1 from './screens/onboarding/OnboardingScreen1';
-import OnboardingGoal from './screens/onboarding/OnboardingGoal';
-import OnboardingDuration from './screens/onboarding/OnboardingDuration';
-import OnboardingQuestions from './screens/onboarding/OnboardingQuestions';
-import OnboardingMyData from './screens/onboarding/OnboardingMyData';
-import OnboardingSummary from './screens/onboarding/OnboardingSummary';
-import OnboardingHatch from './screens/onboarding/OnboardingHatch';
+import OnboardingScreen1 from '@/pages/onboarding/OnboardingScreen1';
+import OnboardingGoal from '@/pages/onboarding/OnboardingGoal';
+import OnboardingDuration from '@/pages/onboarding/OnboardingDuration';
+import OnboardingQuestions from '@/pages/onboarding/OnboardingQuestions';
+import OnboardingMyData from '@/pages/onboarding/OnboardingMyData';
+import OnboardingSummary from '@/pages/onboarding/OnboardingSummary';
+import OnboardingHatch from '@/pages/onboarding/OnboardingHatch';
 
-// Home Screen
-import HomeScreen from './screens/home/HomeScreen';
+// Main Tab Navigator
+import BottomTabNavigator from './app/navigation/BottomTabNavigator';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 // A wrapper to maintain the Background on all Onboarding/Auth screens
 const ScreenWrapper = ({ children, theme = "day" }: { children: React.ReactNode, theme?: "day"|"night" }) => (
@@ -38,21 +42,40 @@ const ScreenWrapper = ({ children, theme = "day" }: { children: React.ReactNode,
 
 export default function App() {
   const [isInitializing, setIsInitializing] = useState(true);
-  const [initialRoute, setInitialRoute] = useState('Landing');
+  const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Landing');
 
   useEffect(() => {
     const initApp = async () => {
       try {
-        // Here you can check async storage for auto login
-        // const email = await AsyncStorage.getItem('userEmail');
-        // if (email) setInitialRoute('Home');
+        // Auto-login: a stored token plus profile means the user already finished signup/login.
+        const [token, email, nickname] = await Promise.all([
+          authStorage.getToken(),
+          AsyncStorage.getItem('userEmail'),
+          AsyncStorage.getItem('userNickname'),
+        ]);
+        if (token && email) {
+          useOnboardingStore.getState().setUserEmail(email);
+          useOnboardingStore.getState().setUserNickname(nickname);
+          setInitialRoute('Home');
+        }
       } catch (error) {
         console.error(error);
       } finally {
         setIsInitializing(false);
       }
     };
+
     initApp();
+
+    // Session expired (401): reset to the entry screen.
+    setUnauthorizedHandler(() => {
+      useOnboardingStore.getState().setUserEmail(null);
+      useOnboardingStore.getState().setUserNickname(null);
+      if (navigationRef.isReady() && navigationRef.getCurrentRoute()?.name !== 'Landing') {
+        navigationRef.reset({ index: 0, routes: [{ name: 'Landing' }] });
+      }
+    });
+    return () => setUnauthorizedHandler(null);
   }, []);
 
   if (isInitializing) {
@@ -63,7 +86,7 @@ export default function App() {
     <SafeAreaProvider>
       <View style={tw`flex-1 bg-white`}>
         <StatusBar style="auto" />
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <Stack.Navigator
             initialRouteName={initialRoute}
             screenOptions={{
@@ -73,7 +96,7 @@ export default function App() {
             }}
           >
             <Stack.Screen name="Landing">
-              {(props: any) => (
+              {(props) => (
                 <ScreenWrapper>
                   <LandingScreen 
                     onSignupClick={() => props.navigation.navigate('Signup')} 
@@ -84,7 +107,7 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="Signup">
-              {(props: any) => (
+              {(props) => (
                 <ScreenWrapper>
                   <SignupScreen 
                     onSignup={(email, nickname) => {
@@ -99,7 +122,7 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="Login">
-              {(props: any) => (
+              {(props) => (
                 <ScreenWrapper>
                   <LoginScreen 
                     onLogin={(email, nickname) => {
@@ -114,7 +137,7 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="Onboarding1">
-              {(props: any) => (
+              {(props) => (
                 <ScreenWrapper>
                   <OnboardingScreen1 onNext={(selectedId) => {
                     useOnboardingStore.getState().setSelectedCategory(selectedId);
@@ -125,7 +148,7 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="OnboardingGoal">
-              {(props: any) => (
+              {(props) => (
                 <ScreenWrapper>
                   <OnboardingGoal
                     onNext={(goalId) => {
@@ -139,7 +162,7 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="OnboardingDuration">
-              {(props: any) => (
+              {(props) => (
                 <ScreenWrapper>
                   <OnboardingDuration
                     goalId={useOnboardingStore.getState().selectedGoal}
@@ -154,7 +177,7 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="OnboardingQuestions">
-              {(props: any) => (
+              {(props) => (
                 <ScreenWrapper>
                   <OnboardingQuestions
                     onNext={(answers) => {
@@ -176,18 +199,29 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="OnboardingMyData">
-              {(props: any) => (
+              {(props) => (
                 <ScreenWrapper>
-                  <OnboardingMyData onConsent={(consent) => {
-                    useOnboardingStore.getState().setMydataConsent(consent);
-                    props.navigation.navigate('OnboardingSummary');
+                  <OnboardingMyData onConsent={async (consent) => {
+                    try {
+                      useOnboardingStore.getState().setMydataConsent(consent);
+                      await useOnboardingStore.getState().submitOnboarding();
+                      props.navigation.navigate('OnboardingSummary');
+                    } catch (error: any) {
+                      console.error('Failed to submit onboarding', error);
+                      const { Alert } = require('react-native');
+                      Alert.alert(
+                        '회원가입 실패',
+                        error.response?.data?.message || '회원가입 중 에러가 발생했어.'
+                      );
+                      throw error; // Re-throw to reset loading state in MyData
+                    }
                   }} />
                 </ScreenWrapper>
               )}
             </Stack.Screen>
 
             <Stack.Screen name="OnboardingSummary">
-              {(props: any) => (
+              {(props) => (
                 <ScreenWrapper>
                   <OnboardingSummary onNext={() => props.navigation.navigate('OnboardingHatch')} />
                 </ScreenWrapper>
@@ -195,7 +229,7 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="OnboardingHatch">
-              {(props: any) => (
+              {(props) => (
                 <ScreenWrapper>
                   <OnboardingHatch onFinish={() => {
                     props.navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
@@ -205,13 +239,8 @@ export default function App() {
             </Stack.Screen>
 
             <Stack.Screen name="Home" options={{ animation: 'fade' }}>
-              {(props: any) => (
-                <HomeScreen
-                  onRestartOnboarding={() => {
-                    useOnboardingStore.getState().setSelectedCategory(null);
-                    props.navigation.reset({ index: 0, routes: [{ name: 'Landing' }] });
-                  }}
-                />
+              {(props) => (
+                <BottomTabNavigator />
               )}
             </Stack.Screen>
           </Stack.Navigator>
