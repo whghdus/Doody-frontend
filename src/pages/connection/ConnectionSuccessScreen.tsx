@@ -81,7 +81,7 @@ export default function ConnectionSuccessScreen({ onGoHome, onGoToPokedex, doody
                   <PointSvg width={28} height={28} />
                 </View>
                 <View style={tw`flex-row items-baseline`}>
-                  <Text style={tw`text-[#B38F00] font-bold text-[11px] mr-2`}>금 RWA 토큰 적립 완료</Text>
+                  <Text style={tw`text-[#B38F00] font-bold text-[11px] mr-2`}>하나머니 적립 완료</Text>
                   <Text style={tw`text-[#B38F00] font-black text-[22px]`}>+{capturedReward}</Text>
                 </View>
               </View>

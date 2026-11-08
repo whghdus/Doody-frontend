@@ -62,9 +62,11 @@ export default function IndependenceMissionModal({
                 <Feather name="chevron-left" size={22} color="white" />
               </TouchableOpacity>
 
-              <View style={tw`bg-white/20 px-3 py-1 rounded-full`}>
-                <Text style={tw`text-white text-xs font-bold`}>금 RWA 토큰 +{reward ?? 50}</Text>
-              </View>
+              {reward !== undefined && reward > 0 && (
+                <View style={tw`bg-white/20 px-3 py-1 rounded-full`}>
+                  <Text style={tw`text-white text-xs font-bold`}>하나머니 +{reward}</Text>
+                </View>
+              )}
             </View>
 
             <Text style={tw`text-white text-2xl font-black mb-1`}>

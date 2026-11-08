@@ -7,13 +7,11 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Platform,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import tw from '@/shared/lib/tailwind';
 import DoodySvg from '@/shared/assets/doody/Doody.webp';
 import { COLORS } from '@/shared/config/theme';
-import { useOnboardingStore } from '@/entities/useOnboardingStore';
 
 interface OnboardingHatchProps {
   onFinish: () => void;
@@ -39,10 +37,10 @@ export default function OnboardingHatch({ onFinish }: OnboardingHatchProps) {
           </View>
 
           {/* Welcome Message */}
-          <Text style={tw`text-gray-700 text-base text-center leading-relaxed font-semibold`}>
-            반가워!{'\n'}
-            너가 원하는 목표에 다가가기 위해{'\n'}
-            나와 매일 한 칸 씩 나아가보자
+          <Text style={tw`text-gray-800 text-[17px] text-center leading-[28px] font-bold`}>
+            반가워! 난 너의 친구 두디야.{'\n'}
+            네가 꿈꾸는 목표에 닿을 수 있게{'\n'}
+            매일 한 칸씩 나와 함께 나아가볼까?
           </Text>
         </View>
 
@@ -50,18 +48,7 @@ export default function OnboardingHatch({ onFinish }: OnboardingHatchProps) {
         <View style={tw`flex-1 justify-end pb-8`}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={async () => {
-              try {
-                await useOnboardingStore.getState().submitOnboarding();
-                onFinish();
-              } catch (error: any) {
-                console.error('Failed to submit onboarding', error);
-                Alert.alert(
-                  '회원가입 실패',
-                  error.response?.data?.message || '회원가입 중 에러가 발생했어.'
-                );
-              }
-            }}
+            onPress={onFinish}
             style={tw`bg-[${COLORS.primary}] py-4 rounded-3xl w-full items-center shadow-lg`}
           >
             <Text style={tw`text-white font-bold text-lg`}>

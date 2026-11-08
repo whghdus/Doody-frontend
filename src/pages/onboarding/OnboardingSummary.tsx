@@ -19,70 +19,45 @@ interface OnboardingSummaryProps {
 
 export default function OnboardingSummary({ onNext }: OnboardingSummaryProps) {
   const insets = useSafeAreaInsets();
-  const goalId = useOnboardingStore((state) => state.selectedGoal);
-  const scores = useOnboardingStore((state) => state.onboardingScores);
   const userNickname = useOnboardingStore((state) => state.userNickname) || '사용자';
+  const onboardingResult = useOnboardingStore((state) => state.onboardingResult);
   
-  // Render goal text with split colors
+  // Render goal text with split colors if there's a newline
   const renderGoalText = () => {
-    switch (goalId) {
-      case 'g1':
-        return (
-          <Text style={tw`text-gray-900 text-lg font-bold leading-snug`}>
-            작은 루틴부터 시작해{"\n"}
-            <Text style={tw`text-[${COLORS.primary}]`}>일상을 탄탄히 채우기</Text>
-          </Text>
-        );
-      case 'g2':
-        return (
-          <Text style={tw`text-gray-900 text-lg font-bold leading-snug`}>
-            돈과 소비를 피하지 않고{"\n"}
-            <Text style={tw`text-[${COLORS.primary}]`}>편안하게 마주하기</Text>
-          </Text>
-        );
-      case 'g3':
-        return (
-          <Text style={tw`text-gray-900 text-lg font-bold leading-snug`}>
-            취업·상담 지원을{"\n"}
-            <Text style={tw`text-[${COLORS.primary}]`}>용기 내어 알아보기</Text>
-          </Text>
-        );
-      default:
-        return (
-          <Text style={tw`text-gray-900 text-lg font-bold leading-snug`}>
-            일상을 가볍게 시작하고{"\n"}
-            <Text style={tw`text-[${COLORS.primary}]`}>안정 되찾기</Text>
-          </Text>
-        );
+    if (!onboardingResult?.plan_summary) {
+      return <Text style={tw`text-gray-900 text-lg font-bold leading-snug`}>플랜을 생성하고 있습니다...</Text>;
     }
+    const parts = onboardingResult.plan_summary.split('\n');
+    if (parts.length > 1) {
+      return (
+        <Text style={tw`text-gray-900 text-lg font-bold leading-snug`}>
+          {parts[0]}{"\n"}
+          <Text style={tw`text-[${COLORS.primary}]`}>{parts.slice(1).join('\n')}</Text>
+        </Text>
+      );
+    }
+    return (
+      <Text style={tw`text-gray-900 text-lg font-bold leading-snug`}>
+        {onboardingResult.plan_summary}
+      </Text>
+    );
   };
 
-  // Mapped first step text
-  const getFirstStepText = () => {
-    switch (goalId) {
-      case 'g1':
-        return '아침 알람 소리를 듣고\n침대에 3분 동안 기지개 켜기';
-      case 'g2':
-        return '통장 잔액 딱 한 번만\n슬쩍 보고 닫기';
-      case 'g3':
-        return '가까운 청년센터 사이트\n즐겨찾기(북마크) 해두기';
-      default:
-        return '오늘 하루 딱 5분만\n햇볕 아래 걷고 오기';
-    }
-  };
-
-  // Determine top 2 focus areas based on highest scores (burden)
+  // Determine top 2 focus areas based on highest initial_ari scores (burden)
   const focusAreas = React.useMemo(() => {
+    if (!onboardingResult) return [];
+    
+    const initialAri = onboardingResult.initial_ari || { rhythm: 0, autonomy: 0, connection: 0 };
     const areas = [
-      { id: 'rhythm', title: '리듬', desc: '하루 시작을 가볍게 되찾기', score: scores.rhythm },
-      { id: 'independence', title: '자립', desc: '돈과 소비를 천천히 마주하기', score: scores.independence },
-      { id: 'connection', title: '연결', desc: '주변 관계를 가볍게 되찾기', score: scores.connection },
+      { id: 'rhythm', title: '리듬', desc: '하루 시작을 가볍게 되찾기', score: initialAri.rhythm },
+      { id: 'independence', title: '자립', desc: '돈과 소비를 천천히 마주하기', score: initialAri.autonomy },
+      { id: 'connection', title: '연결', desc: '주변 관계를 가볍게 되찾기', score: initialAri.connection },
     ];
 
     // Sort descending by score, select top 2
     const sorted = [...areas].sort((a, b) => b.score - a.score);
     return [sorted[0], sorted[1]];
-  }, [scores]);
+  }, [onboardingResult]);
 
   return (
     <SafeAreaView style={tw`flex-1`}>
@@ -160,7 +135,7 @@ export default function OnboardingSummary({ onNext }: OnboardingSummaryProps) {
               오늘의 첫걸음
             </Text>
             <Text style={tw`text-gray-900 text-lg font-bold leading-snug`}>
-              {getFirstStepText()}
+              {onboardingResult?.firstStepMission || '미션을 불러오는 중...'}
             </Text>
           </View>
           

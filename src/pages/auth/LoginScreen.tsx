@@ -46,6 +46,13 @@ export default function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
         await authStorage.setToken(response.result.userId);
         await AsyncStorage.setItem('userEmail', response.result.email);
         await AsyncStorage.setItem('userNickname', response.result.nickname);
+        
+        // Clear local caches from previous sessions/accounts
+        await AsyncStorage.removeItem('daily_mission_completed_date');
+        await AsyncStorage.removeItem('morning_checkin_date');
+        await AsyncStorage.removeItem('night_checkin_date');
+        await AsyncStorage.removeItem('mock_quiz_completed');
+
         onLogin(response.result.email, response.result.nickname);
       } else {
         throw new Error(response.message || '로그인 실패');

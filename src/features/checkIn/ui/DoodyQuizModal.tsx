@@ -29,9 +29,14 @@ export default function DoodyQuizModal({
     }
   }, [visible]);
 
-  const question = "Q. 아버지인 광개토대왕의 업적을 기리기 위해 광개토대왕릉비를 건립한 고구려의 왕은\n누구일까?";
-  const options = ["태조왕", "근초고왕", "장수왕", "소수림왕"];
-  const correctIdx = 2; // "장수왕"
+  const question = "Q. 주식이란 무엇일까요?";
+  const options = [
+    "회사의 빚",
+    "회사의 소유권을 나타내는 증서",
+    "회사의 재고를 나타내는 증서",
+    "회사의 미래 자산"
+  ];
+  const correctIdx = 1; // "회사의 소유권을 나타내는 증서"
 
   const handleSubmit = () => {
     if (selectedIdx === null) return;
@@ -123,7 +128,7 @@ export default function DoodyQuizModal({
           {isSubmitted && !isCorrect && (
             <View style={tw`w-full bg-gray-100 rounded-xl p-4 mb-6`}>
               <Text style={tw`text-gray-700 text-xs font-bold leading-relaxed`}>
-                평양 천도, 한강 유역 장악, 광개토대왕릉비 건립은 5세기 고구려의 전성기를 이끈 장수왕의 업적입니다.
+                주식은 회사의 자본을 구성하는 단위이며, 주식을 보유한다는 것은 그 회사의 소유권을 일부 가진다는 의미란다.
               </Text>
             </View>
           )}

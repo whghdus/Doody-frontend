@@ -15,6 +15,8 @@ interface IndependenceSwapModalProps {
   onBack: () => void;
   onRest: () => void;
   onStartSmaller: () => void;
+  candidate?: import('@/shared/api/mission').BackendMission | null;
+  message?: string;
 }
 
 export default function IndependenceSwapModal({
@@ -22,6 +24,8 @@ export default function IndependenceSwapModal({
   onBack,
   onRest,
   onStartSmaller,
+  candidate,
+  message,
 }: IndependenceSwapModalProps) {
   return (
     <Modal
@@ -62,22 +66,18 @@ export default function IndependenceSwapModal({
               </Text>
             </View>
 
-            {/* Subtitle */}
-            <View style={tw`items-center mb-6`}>
-              <Text style={tw`text-[#008C75] font-black text-sm`}>
-                💳 자립 미션을 난이도를 조절했어요
-              </Text>
-            </View>
+
 
             {/* Adjusted Mission Card */}
             <View style={tw`bg-[#008C75] rounded-[24px] p-6 mb-6 shadow-sm`}>
-              {/* Points Badge */}
-              <View style={tw`bg-white/20 px-3 py-1 rounded-full self-start mb-3`}>
-                <Text style={tw`text-white text-xs font-bold`}>금 RWA 토큰 +50</Text>
-              </View>
+              {candidate?.reward?.hanaMoney !== undefined && candidate.reward.hanaMoney > 0 && (
+                <View style={tw`bg-white/20 px-3 py-1 rounded-full self-start mb-3`}>
+                  <Text style={tw`text-white text-xs font-bold`}>하나머니 +{candidate.reward.hanaMoney}</Text>
+                </View>
+              )}
               {/* Mission Title */}
               <Text style={tw`text-white text-xl font-bold leading-normal`}>
-                나에게 맞는 지원금 보기
+                {candidate?.title || '더 쉬운 미션을 찾아볼게요!'}
               </Text>
             </View>
 
@@ -85,33 +85,20 @@ export default function IndependenceSwapModal({
             <View style={tw`mb-2`}>
               <Text style={tw`text-gray-400 text-xs font-bold mb-4`}>이렇게 하면 돼</Text>
               <View style={tw`gap-y-4`}>
-                {/* Step 1 */}
-                <View style={tw`flex-row items-center`}>
-                  <View style={tw`w-6 h-6 rounded-full bg-[#EEF7F5] items-center justify-center mr-3`}>
-                    <Text style={tw`text-[#008C75] text-xs font-bold`}>1</Text>
-                  </View>
-                  <Text style={tw`text-gray-800 text-sm font-bold leading-relaxed`}>
-                    두디가 데려온 곳, 딱 한 곳만 열어봐
-                  </Text>
-                </View>
-                {/* Step 2 */}
-                <View style={tw`flex-row items-center`}>
-                  <View style={tw`w-6 h-6 rounded-full bg-[#EEF7F5] items-center justify-center mr-3`}>
-                    <Text style={tw`text-[#008C75] text-xs font-bold`}>2</Text>
-                  </View>
-                  <Text style={tw`text-gray-800 text-sm font-bold leading-relaxed`}>
-                    마음 가는 데 없으면 그냥 닫아도 돼
-                  </Text>
-                </View>
-                {/* Step 3 */}
-                <View style={tw`flex-row items-center`}>
-                  <View style={tw`w-6 h-6 rounded-full bg-[#EEF7F5] items-center justify-center mr-3`}>
-                    <Text style={tw`text-[#008C75] text-xs font-bold`}>3</Text>
-                  </View>
-                  <Text style={tw`text-gray-800 text-sm font-bold leading-relaxed`}>
-                    구경만 해도 자립 기록 한 칸이 쌓여
-                  </Text>
-                </View>
+                {candidate?.howTo && candidate.howTo.length > 0 ? (
+                  candidate.howTo.map((step, index) => (
+                    <View key={index} style={tw`flex-row items-center pr-4`}>
+                      <View style={tw`w-6 h-6 rounded-full bg-[#EEF7F5] items-center justify-center mr-3 shrink-0`}>
+                        <Text style={tw`text-[#008C75] text-xs font-bold`}>{index + 1}</Text>
+                      </View>
+                      <Text style={tw`text-gray-800 text-sm font-bold leading-relaxed shrink`}>
+                        {step}
+                      </Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={tw`text-gray-400 text-sm`}>가이드가 없습니다.</Text>
+                )}
               </View>
             </View>
 

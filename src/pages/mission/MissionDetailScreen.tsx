@@ -80,7 +80,7 @@ export default function MissionDetailScreen({
               {[
                 '오늘 돈을 쓴 게 있었는지만 떠올려요',
                 "없었다면 '0원 소비'로 남겨요",
-                '완료하면 자립 기록과 금 RWA 토큰이 쌓여',
+                '완료하면 자립 기록과 하나머니가 쌓여',
               ].map((step, idx) => (
                 <View key={idx} style={tw`flex-row items-start`}>
                   <View style={tw`w-5 h-5 rounded-full bg-[#008C75] items-center justify-center mr-3 mt-0.5`}>

@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Dimensions,
+  Alert,
 } from 'react-native';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 import tw from '@/shared/lib/tailwind';
@@ -30,23 +31,38 @@ export default function NightCheckInScreen({ onClose }: NightCheckInScreenProps)
   const [message, setMessage] = useState('');
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [doodyResponse, setDoodyResponse] = useState<string | null>(null);
+  const [earnedPoints, setEarnedPoints] = useState(30);
 
   const handleSubmit = async () => {
     if (message.trim()) {
       const msg = message.trim();
       setSubmittedMessage(msg);
       setMessage('');
-
       try {
-        await checkInApi.night('night_mood_default', msg);
-      } catch (error) {
-        console.error('Failed night check-in', error);
-      }
+        const response = await checkInApi.night('night_mood_default', msg);
 
-      // 2초 뒤에 성공 모달 표시
-      setTimeout(() => {
-        setShowSuccessModal(true);
-      }, 2000);
+        if (response.greeting) {
+          setDoodyResponse(response.greeting);
+        } else {
+          setDoodyResponse("오늘을 무사히 마무리한 것만으로도 충분히 잘했어. 푹 쉬자.");
+        }
+        if (response.pointsEarned) {
+          setEarnedPoints(response.pointsEarned);
+        }
+
+        // 맞춤형 응답이 나오고 3초 뒤에 성공 모달 표시
+        setTimeout(() => {
+          setShowSuccessModal(true);
+        }, 3000);
+      } catch (error: any) {
+        console.error('Failed night check-in', error);
+        Alert.alert(
+          '체크인 실패',
+          error.response?.data?.message || '저장에 실패했습니다. 이미 완료한 체크인일 수 있습니다.',
+          [{ text: '확인', onPress: onClose }]
+        );
+      }
     }
   };
 
@@ -54,13 +70,13 @@ export default function NightCheckInScreen({ onClose }: NightCheckInScreenProps)
     <Background theme="night">
       <View style={[tw`absolute inset-x-0 top-0 z-0`, { height: SCREEN_HEIGHT }]} pointerEvents="none">
         {/* Doody's Speech Bubble */}
-        <View style={[tw`px-6 z-10 absolute w-full`, { top: 130 }]}>
+        <View style={[tw`absolute inset-0 items-center justify-center mb-70`]}>
           <View style={tw`bg-white rounded-[24px] p-6 shadow-md relative`}>
             <View style={tw`absolute -top-3 left-6 bg-[#008C75] px-3 py-1 rounded-full flex-row items-center`}>
               <Text style={tw`text-white text-xs font-bold`}>🌱 두디</Text>
             </View>
             <Text style={tw`text-gray-900 text-lg font-bold mt-2 leading-7`}>
-              오늘 하루를 한마디로 남겨볼까요?{'\n'}괜찮아도, 별로여도 그대로 적어도 돼.
+              {doodyResponse ? doodyResponse : `오늘 하루를 한마디로 남겨볼까요?\n괜찮아도, 별로여도 그대로 적어도 돼.`}
             </Text>
             {/* Bubble Tail */}
             <View style={[
@@ -71,7 +87,7 @@ export default function NightCheckInScreen({ onClose }: NightCheckInScreenProps)
         </View>
 
         {/* Doody Graphic */}
-        <View style={[tw`absolute w-full items-center`, { top: 280 }]}>
+        <View style={tw`absolute inset-0 items-center justify-center mt-32`}>
           <View style={tw`w-64 h-64 items-center justify-center `}>
             <Image source={WriteDoodySvg} style={{ width: '100%', height: '100%', zIndex: 0 }} contentFit="contain" />
           </View>
@@ -108,20 +124,21 @@ export default function NightCheckInScreen({ onClose }: NightCheckInScreenProps)
 
               {/* Input Area */}
               <View style={tw`px-6 pb-6 pt-2`}>
-                <View style={tw`bg-white rounded-full flex-row items-center px-2 py-1 shadow-md`}>
+                <View style={tw`bg-white rounded-[24px] flex-row items-end px-2 py-1 shadow-md`}>
                   <TextInput
-                    style={tw`flex-1 h-12 px-4 text-base text-gray-800`}
+                    style={[tw`flex-1 min-h-[48px] max-h-[120px] px-4 pt-3 pb-3 text-base text-gray-800`, { textAlignVertical: 'top' }]}
                     placeholder="두디에게 한마디를 건네봐..."
                     placeholderTextColor="#9CA3AF"
                     value={message}
                     onChangeText={setMessage}
-                    onSubmitEditing={handleSubmit}
-                    returnKeyType="send"
+                    multiline={true}
+                    editable={!submittedMessage}
                   />
                   <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={handleSubmit}
-                    style={tw`w-10 h-10 rounded-full bg-[#008C75] items-center justify-center ml-2`}
+                    disabled={!!submittedMessage}
+                    style={tw`w-10 h-10 rounded-full ${submittedMessage ? 'bg-gray-300' : 'bg-[#008C75]'} items-center justify-center ml-2 mb-1`}
                   >
                     <Feather name="arrow-up" size={20} color="white" />
                   </TouchableOpacity>
@@ -137,7 +154,7 @@ export default function NightCheckInScreen({ onClose }: NightCheckInScreenProps)
         onConfirm={onClose}
         title="오늘 하루도 고생했어!"
         description={`오늘을 무사히 마무리한 것만으로도\n충분히 잘했어. 푹 쉬자.`}
-        points={30}
+        points={earnedPoints}
       />
     </Background>
   );

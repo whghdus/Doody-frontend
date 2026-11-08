@@ -94,7 +94,7 @@ function TimelineRecords({
             style={tw`relative flex-row pb-4`}
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel={`${item.dayTime} 기록: ${item.title}, 적립 금 RWA 토큰은 ${item.points}`}
+            accessibilityLabel={`${item.dayTime} 기록: ${item.title}, 적립 하나머니는 ${item.points}`}
             accessibilityHint="상세 기록 모달을 엽니다."
           >
             {/* Left vertical timeline line and dot (Absolutely positioned to stretch across padding-bottom) */}

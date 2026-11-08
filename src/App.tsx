@@ -178,9 +178,20 @@ export default function App() {
             <Stack.Screen name="OnboardingMyData">
               {(props: any) => (
                 <ScreenWrapper>
-                  <OnboardingMyData onConsent={(consent) => {
-                    useOnboardingStore.getState().setMydataConsent(consent);
-                    props.navigation.navigate('OnboardingSummary');
+                  <OnboardingMyData onConsent={async (consent) => {
+                    try {
+                      useOnboardingStore.getState().setMydataConsent(consent);
+                      await useOnboardingStore.getState().submitOnboarding();
+                      props.navigation.navigate('OnboardingSummary');
+                    } catch (error: any) {
+                      console.error('Failed to submit onboarding', error);
+                      const { Alert } = require('react-native');
+                      Alert.alert(
+                        '회원가입 실패',
+                        error.response?.data?.message || '회원가입 중 에러가 발생했어.'
+                      );
+                      throw error; // Re-throw to reset loading state in MyData
+                    }
                   }} />
                 </ScreenWrapper>
               )}

@@ -40,7 +40,7 @@ export default function NightSuccessModal({ visible, onGoHome, onNextMission }: 
             </View>
             <View>
               <Text style={tw`text-[#D48C00] font-black text-xl mb-0.5`}>+30</Text>
-              <Text style={tw`text-[#D48C00] font-bold text-xs`}>금 RWA 토큰 적립 완료</Text>
+              <Text style={tw`text-[#D48C00] font-bold text-xs`}>하나머니 적립 완료</Text>
             </View>
           </View>
 

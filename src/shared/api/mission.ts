@@ -13,6 +13,8 @@ export interface Mission {
   restMessage?: string | null;
   hasFallback?: boolean;
   axis?: string;
+  vRhythm?: number;
+  completable?: boolean;
 }
 
 export interface CompleteMissionResponse {
@@ -39,6 +41,8 @@ export interface BackendMission {
   goalTags: string[];
   howTo: string[];
   reason: string;
+  reward?: { hanaMoney: number };
+  completable?: boolean;
 }
 
 export interface BackendTodayMissionResponse {
@@ -56,15 +60,32 @@ export interface BackendTodayMissionResponse {
 
 export const missionApi = {
   getTodayMission: async (): Promise<Mission> => {
+    // --- MOCK FOR TEST ---
+    return {
+      id: 'a06_future_capture_1',
+      title: '마음에 드는 공고 찍어서 올리기',
+      points: 50,
+      steps: ['마음에 드는 채용 공고나 지원 사업 공고를 찾아 사진 찍기', '사진을 업로드하여 완료하기'],
+      reason: '관심 있는 분야의 공고를 찾아보는 것도 큰 시작이야.',
+      difficulty: 'normal',
+      nextPath: '',
+      missionState: 'active',
+      restMessage: '',
+      hasFallback: false,
+      axis: 'autonomy',
+      vRhythm: 0,
+      completable: true,
+    };
+    // ----------------------
     const userId = await authStorage.getToken();
     if (!userId) {
       throw new Error('User ID is not found. Please log in.');
     }
-    
+
     // Backend API: GET /api/users/{userId}/missions/today
     const response = await apiClient.get<{ result: BackendTodayMissionResponse }>(`/users/${userId}/missions/today`);
     const data = response.data.result;
-    
+
     const activeMission = data.mission || data.fallback;
     if (!activeMission) {
       // Backend returned null missions (e.g., when the AI engine is not connected and templates are empty, or when gated)
@@ -72,21 +93,21 @@ export const missionApi = {
         id: 'gated-mission-id',
         title: data.restMessage || '오늘은 일상 루틴 관리에 집중해봐!',
         points: 0,
-        steps: ['아침 물 한잔 마시기', '오늘의 기분 기록하기'],
-        reason: '가끔은 추가 미션 없이 일상 패턴을 정돈하는 것도 큰 자립이야.',
-        difficulty: 'easy',
+        steps: [],
         nextPath: data.nextPath || '',
         missionState: data.missionState || 'gated',
-        restMessage: data.restMessage || '오늘은 일상 루틴 관리에 집중해봐!'
+        restMessage: data.restMessage || '오늘은 일상 루틴 관리에 집중해봐!',
+        hasFallback: data.source === 'FALLBACK',
+        vRhythm: data.vRhythm,
       };
     }
-    
+
     const diffMap: Record<number, 'easy' | 'normal' | 'hard'> = {
       1: 'easy',
       2: 'normal',
       3: 'hard'
     };
-    
+
     return {
       id: activeMission.id,
       title: activeMission.title,
@@ -99,6 +120,8 @@ export const missionApi = {
       restMessage: data.restMessage,
       hasFallback: data.fallback !== null,
       axis: activeMission.axis,
+      vRhythm: data.vRhythm,
+      completable: activeMission.completable !== false, // default true unless explicitly false
     };
   },
 
@@ -106,16 +129,16 @@ export const missionApi = {
     try {
       const userId = await authStorage.getToken();
       if (!userId) throw new Error('No User ID');
-      
+
       const response = await apiClient.post<{ result: BackendMission }>(`/users/${userId}/missions/swap`, { difficulty });
       const activeMission = response.data.result;
-      
+
       const diffMap: Record<number, 'easy' | 'normal' | 'hard'> = {
         1: 'easy',
         2: 'normal',
         3: 'hard'
       };
-      
+
       return {
         id: activeMission.id,
         title: activeMission.title,
@@ -127,8 +150,8 @@ export const missionApi = {
     } catch (error) {
       console.log('swapMission backend endpoint not available, returning simulated swap mission:', error);
       // Fallback simulated swap mission
-      const steps = difficulty === 'easy' 
-        ? ['간단한 잔액 조회', '가계부에 기록'] 
+      const steps = difficulty === 'easy'
+        ? ['간단한 잔액 조회', '가계부에 기록']
         : ['이번 달 고정비 정리', '내일 계획 세우기'];
       return {
         id: 'simulated-swap-id',
@@ -147,7 +170,7 @@ export const missionApi = {
       const filename = photoUri.split('/').pop() || 'photo.jpg';
       const match = /\.(\w+)$/.exec(filename);
       const type = match ? `image/${match[1]}` : `image`;
-      
+
       formData.append('photo', {
         uri: photoUri,
         name: filename,
@@ -160,8 +183,8 @@ export const missionApi = {
       if (!userId) throw new Error('No User ID');
 
       const response = await apiClient.post<{ result: CompleteMissionResponse }>(
-        `/users/${userId}/missions/complete`, 
-        formData, 
+        `/users/${userId}/missions/complete`,
+        formData,
         {
           headers: {
             'Content-Type': 'multipart/form-data',

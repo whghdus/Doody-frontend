@@ -23,11 +23,10 @@ const DOODY_SVGS = [DoodySvg, BrushDoodySvg, HappyDoodySvg, SadDoodySvg, SmileDo
 
 interface ReportScreenProps {
   onBack: () => void;
-  onGoCollection: () => void;
   onDoodyClick: (id: string) => void;
 }
 
-export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: ReportScreenProps) {
+export default function ReportScreen({ onBack, onDoodyClick }: ReportScreenProps) {
   const [timeRange, setTimeRange] = useState<'week' | 'month'>('month');
   const [categoryTab, setCategoryTab] = useState<'rhythm' | 'independence' | 'connection'>('independence');
   const [timelineLimit, setTimelineLimit] = useState(3);
@@ -48,59 +47,6 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
       setLoading(true);
       try {
         const data = await reportApi.getRecoveryReport(timeRange);
-        
-        try {
-          const mockQuiz = await AsyncStorage.getItem('mock_quiz_completed');
-          if (mockQuiz === 'true') {
-            const rhythmGroup = data.recordGroups.find(g => g.axis === 'RHYTHM');
-            
-            let mockDateStr = new Date().toISOString();
-            if (rhythmGroup && rhythmGroup.records && rhythmGroup.records.length > 0) {
-              const firstDate = rhythmGroup.records[0].recordedAt;
-              if (firstDate) {
-                const dateObj = new Date(firstDate);
-                dateObj.setHours(17, 19, 0, 0);
-                mockDateStr = dateObj.toISOString();
-              }
-            } else {
-              const dateObj = new Date();
-              dateObj.setHours(17, 19, 0, 0);
-              mockDateStr = dateObj.toISOString();
-            }
-
-            const mockRecord = {
-              recordId: Date.now(),
-              recordedAt: mockDateStr,
-              title: '두디의 깜짝 퀴즈 정답 맞추기',
-              reward: 50
-            };
-
-            if (rhythmGroup) {
-              rhythmGroup.records.unshift(mockRecord);
-              rhythmGroup.recordCount = (rhythmGroup.recordCount || 0) + 1;
-            } else {
-              data.recordGroups.push({
-                axis: 'RHYTHM',
-                recordCount: 1,
-                records: [mockRecord]
-              });
-            }
-
-            if (!data.axisSummaries) data.axisSummaries = [];
-            const rhythmSummary = data.axisSummaries.find(s => s.axis === 'RHYTHM');
-            if (rhythmSummary) {
-              rhythmSummary.recordCount = (rhythmSummary.recordCount || 0) + 1;
-            } else {
-              data.axisSummaries.push({ axis: 'RHYTHM', recordCount: 1 });
-            }
-            if (!data.summary) data.summary = { totalRecordCount: 0, recordedDayCount: 0, totalPoint: 0 };
-            data.summary.totalPoint = (data.summary.totalPoint || 0) + 50;
-            data.summary.totalRecordCount = (data.summary.totalRecordCount || 0) + 1;
-          }
-        } catch (e) {
-          console.warn('Failed to inject mock quiz record', e);
-        }
-
         setReportData(data);
       } catch (err) {
         console.error('Failed to fetch recovery report:', err);
@@ -118,6 +64,19 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
     'CONNECTION': 'connection'
   };
 
+  const translateTitle = (title: string, category: string) => {
+    if (category !== 'rhythm' || !title) return title || '기록';
+    const upper = title.toUpperCase();
+    if (upper === 'TERRIBLE') return '아침 기상: 아주 별로';
+    if (upper === 'BAD') return '아침 기상: 별로';
+    if (upper === 'OKAY') return '아침 기상: 그럭저럭';
+    if (upper === 'GOOD') return '아침 기상: 좋음';
+    if (upper === 'EXCELLENT') return '아침 기상: 아주 좋음';
+    if (upper.includes('MORNING')) return '아침 회고';
+    if (upper.includes('NIGHT') || upper.includes('EVENING')) return '저녁 회고';
+    return title;
+  };
+
   const timelineData = reportData?.recordGroups.flatMap(group => {
     return group.records.map((record: any) => {
       // Handle nested reward objects or various point field names
@@ -129,11 +88,14 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
       } else {
         rewardAmt = record.point ?? record.points ?? record.pointsEarned ?? record.amount ?? record.hanaMoney ?? record.rewardAmount ?? record.acquiredPoint ?? 0;
       }
+
+      const categoryStr = axisMap[group.axis] || 'rhythm';
+
       return {
-        category: axisMap[group.axis] || 'rhythm',
+        category: categoryStr,
         day: record.recordedAt ? new Date(record.recordedAt).toLocaleDateString('ko-KR', { weekday: 'short' }) : '오늘',
         time: record.recordedAt ? new Date(record.recordedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '00:00',
-        title: record.title || '기록',
+        title: translateTitle(record.title, categoryStr),
         points: `+${rewardAmt}`
       };
     })
@@ -207,10 +169,10 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
               </Text>
             </View>
           </View>
-          
+
           {/* Points Row */}
           <View style={tw`bg-[#EEF7F5] rounded-xl p-3 flex-row justify-between items-center`}>
-            <Text style={tw`text-[${COLORS.primary}] text-xs font-bold`}>적립 금 RWA 토큰</Text>
+            <Text style={tw`text-[${COLORS.primary}] text-xs font-bold`}>하나머니 적립</Text>
             <Text style={tw`text-[${COLORS.primary}] text-base font-black`}>
               +{reportData?.summary?.totalPoint?.toLocaleString() || 0}
             </Text>
@@ -220,7 +182,7 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
         {/* Timeline Section */}
         <View style={tw`mb-8`}>
           <Text style={tw`text-gray-500 text-xs font-bold mb-3`}>리듬·자립·연결 기록</Text>
-          
+
           {/* Category Tabs */}
           <View style={tw`flex-row bg-white rounded-full p-1 mb-4 shadow-sm border border-gray-100`}>
             {([
@@ -259,7 +221,7 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
                         <View style={[tw`absolute top-3 bottom-[-32px] w-0.5 bg-[#C2E0D9]`, { left: 7 }]} />
                       )}
                     </View>
-                    
+
                     {/* Content Card */}
                     <View style={tw`flex-1 bg-white rounded-2xl p-4 shadow-md flex-row justify-between items-center`}>
                       <View style={tw`flex-1 pr-3`}>
@@ -273,15 +235,15 @@ export default function ReportScreen({ onBack, onGoCollection, onDoodyClick }: R
                   </View>
                 );
               })}
-              
+
               {filteredData.length === 0 && (
                 <Text style={tw`text-gray-400 text-center py-4`}>기록이 없어.</Text>
               )}
             </View>
           )}
-          
+
           {!loading && timelineLimit < filteredData.length && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={tw`items-center py-2`}
               onPress={() => setTimelineLimit(prev => prev + 5)}
             >

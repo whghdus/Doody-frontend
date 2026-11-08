@@ -47,13 +47,14 @@ export default function MorningSuccessModal({
             {description}
           </Text>
 
-          {/* Point Badge */}
-          <View style={tw`bg-[#FFF9E6] px-5 py-2 rounded-full mb-8 flex-row items-center border border-[#F5B800]/20`}>
-            <View style={tw`mr-2 shadow-sm`}>
-              <PointSvg width={20} height={20} />
+          {points !== undefined && points > 0 && (
+            <View style={tw`bg-[#FFF9E6] rounded-full px-5 py-3 mb-6 flex-row items-center border border-[#FFE8A1]`}>
+              <View style={tw`mr-2 shadow-sm`}>
+                <PointSvg width={20} height={20} />
+              </View>
+              <Text style={tw`text-[#D48C00] font-black text-sm`}>하나머니 +{points}</Text>
             </View>
-            <Text style={tw`text-[#D48C00] font-black text-sm`}>금 RWA 토큰 +{points}</Text>
-          </View>
+          )}
 
           {/* Confirm Button */}
           <TouchableOpacity

@@ -1,7 +1,7 @@
 // src/store/useOnboardingStore.ts
 import { create } from 'zustand';
 import { userApi } from '@/shared/api/user';
-import { authApi } from '@/shared/api/auth';
+import { authApi, SignupResponse } from '@/shared/api/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authStorage } from '@/shared/lib/authStorage';
 
@@ -27,6 +27,7 @@ interface OnboardingState {
   moodAnswers: MoodAnswers;          // Screen 4: 기분 질문
   mydataConsent: boolean;            // Screen 5: 마이데이터 연동 동의
   onboardingScores: OnboardingScores;
+  onboardingResult: SignupResponse['result'] | null; // 백엔드 플랜 결과
 
   // Basic Setters
   setCurrentScreen: (screen: number) => void;
@@ -75,6 +76,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
     independence: 0,
     connection: 0,
   },
+  onboardingResult: null,
 
   setCurrentScreen: (screen) => set({ currentScreen: screen }),
   setUserEmail: (email) => set({ userEmail: email }),
@@ -167,6 +169,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
       moodAnswers: { daily: '', spending: '', contact: '' },
       mydataConsent: false,
       onboardingScores: { rhythm: 0, independence: 0, connection: 0 },
+      onboardingResult: null,
     });
     requestAnimationFrame(() => {
       set({ currentScreen: 0 }); // 홈화면 두디 로고 클릭 시 LandingScreen(0)으로 이동
@@ -252,12 +255,6 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
     const autonomyGoal = "돈과 소비를 피하지 않고 편안하게 마주하기";
     const connectionGoal = "주변 관계를 가볍게 되찾기";
 
-    // 6. firstStepMission mapping
-    let firstStepMission = "오늘 하루 딱 5분만 햇볕 아래 걷고 오기";
-    if (state.selectedGoal === 'g1') firstStepMission = "통장 잔액 한 번만 슥 보고 닫기";
-    else if (state.selectedGoal === 'g2') firstStepMission = "내일 쓸 예산 5천원만 미리 정해두기";
-    else if (state.selectedGoal === 'g3') firstStepMission = "가까운 청년센터 사이트 즐겨찾기(북마크) 해두기";
-
     const signupData = {
       email: state.userEmail || '',
       nickname: state.userNickname || '',
@@ -270,7 +267,6 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
       isMydataLinked: state.mydataConsent,
       autonomyGoal,
       connectionGoal,
-      firstStepMission,
     };
 
     try {
@@ -283,6 +279,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
         set({
           userEmail: response.result.email,
           userNickname: response.result.nickname,
+          onboardingResult: response.result,
         });
       }
     } catch (error: any) {

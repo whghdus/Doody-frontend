@@ -19,10 +19,10 @@ import { useCollectionStore } from '@/entities/useCollectionStore';
 import Background from '@/shared/ui/Background';
 
 const DOODY_SVGS = [
-  DoodySvg, 
-  BrushDoodySvg, 
-  HappyDoodySvg, 
-  SadDoodySvg, 
+  DoodySvg,
+  BrushDoodySvg,
+  HappyDoodySvg,
+  SadDoodySvg,
   SmileDoodySvg,
   ExplorationDoodySvg, // index 5
   SalaryDoodySvg, // index 6

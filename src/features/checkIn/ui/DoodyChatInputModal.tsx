@@ -25,11 +25,7 @@ interface DoodyChatInputModalProps {
   onSubmit: (text: string) => void;
 }
 
-export default function DoodyChatInputModal({
-  visible,
-  onClose,
-  onSubmit,
-}: DoodyChatInputModalProps) {
+export default function DoodyChatInputModal({ visible, onClose, onSubmit }: DoodyChatInputModalProps) {
   const insets = useSafeAreaInsets();
   const [inputText, setInputText] = useState('');
 
@@ -105,8 +101,8 @@ export default function DoodyChatInputModal({
               <View style={tw`flex-1 justify-end`} pointerEvents="box-none">
                 {/* Bottom Input Area */}
                 <View style={[
-                  tw`px-6 pb-6 pt-2`,
-                  { paddingBottom: Math.max(insets.bottom + 10, 24) }
+                  tw`px-6 pt-2`,
+                  { paddingBottom: isKeyboardVisible ? 10 : Math.max(insets.bottom + 10, 24) }
                 ]}>
                   <View style={tw`bg-white rounded-full flex-row items-center px-2 py-1 shadow-md`}>
                     <TextInput

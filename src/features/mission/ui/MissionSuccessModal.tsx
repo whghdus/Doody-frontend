@@ -49,7 +49,7 @@ export default function MissionSuccessModal({
               <View>
                 <Text style={tw`text-[#D48C00] text-lg font-bold`}>+30</Text>
                 <Text style={tw`text-gray-500 text-xs font-semibold mt-0.5`}>
-                  금 RWA 토큰 적립 완료
+                  하나머니 적립 완료
                 </Text>
               </View>
             </View>

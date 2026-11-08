@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Alert } from 'react-native';
+import { View, Alert, Text } from 'react-native';
+import tw from '@/shared/lib/tailwind';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { missionApi, Mission } from '@/shared/api/mission';
 import MissionVerifyScreen from '@/pages/mission/MissionVerifyScreen';
@@ -13,7 +14,7 @@ import { StageType } from '@/pages/mission/NextStageScreen';
 interface ActiveMissionWidgetProps {
   currentMission: string;
   missionData: Mission | null;
-  homeMode: 'default' | 'completed' | 'resting';
+  homeMode: 'default' | 'completed' | 'resting' | 'connection_priority';
   points: number;
   missionCount: number;
   onPointsEarned: (points: number, currentStep: number) => void;
@@ -40,12 +41,15 @@ export default function ActiveMissionWidget({
   const [nextStageType, setNextStageType] = useState<StageType>('connection');
 
   const handleStartMission = useCallback(() => {
-    if (missionData && missionData.axis) {
-      if (missionData.axis === 'AUTONOMY') onNavigateTab('independence');
-      else if (missionData.axis === 'CONNECTION') onNavigateTab('connection');
+    const axis = missionData?.axis?.toUpperCase();
+    if (axis) {
+      if (axis === 'AUTONOMY') onNavigateTab('independence');
+      else if (axis === 'CONNECTION') onNavigateTab('connection');
+      else onNavigateTab('connection'); // fallback
     } else if (missionData && missionData.nextPath) {
-      if (missionData.nextPath === '/autonomy') onNavigateTab('independence');
-      else if (missionData.nextPath === '/connection') onNavigateTab('connection');
+      if (missionData.nextPath.toLowerCase().includes('autonomy')) onNavigateTab('independence');
+      else if (missionData.nextPath.toLowerCase().includes('connection')) onNavigateTab('connection');
+      else onNavigateTab('connection');
     } else {
       if (currentMission.includes('자립')) onNavigateTab('independence');
       else onNavigateTab('connection');
@@ -56,16 +60,7 @@ export default function ActiveMissionWidget({
     setHomeViewState('verify');
   }, []);
 
-  const handleRestForToday = useCallback(async () => {
-    try {
-      await missionApi.swapMission('easy');
-      onRefreshData();
-    } catch (error) {
-      console.error('Failed to rest today', error);
-    }
-    onRestToday();
-    setHomeViewState('main');
-  }, [onRefreshData, onRestToday]);
+  // onRestToday is used directly when user wants to rest without swapping.
 
   const handleStartSmallerMission = useCallback(async () => {
     try {
@@ -132,20 +127,31 @@ export default function ActiveMissionWidget({
 
   return (
     <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-      {homeMode === 'default' && (
+      {(homeMode === 'default' || homeMode === 'completed' || homeMode === 'connection_priority') && (
         <MissionCard
           currentMission={currentMission}
+          isCompleted={homeMode === 'completed'}
+          completable={missionData?.completable !== false}
           onStartMission={handleStartMission}
-          onRest={() => setHomeViewState('detail')}
+          onRest={onRestToday}
         />
+      )}
+
+      {homeMode === 'resting' && (
+        <View style={tw`bg-white/10 rounded-3xl p-6 shadow-md border border-white/20 w-full mb-4 items-center justify-center min-h-[140px]`}>
+          <Text style={tw`text-white text-base font-bold text-center leading-relaxed`}>
+            {missionData?.restMessage || '오늘은 아무것도 하지 않고 온전히 쉬어봐요.'}
+          </Text>
+        </View>
       )}
 
       {homeViewState === 'detail' && (
         <MissionDetailModal
           visible={homeViewState === 'detail'}
           currentMission={currentMission}
+          missionData={missionData}
           onClose={() => setHomeViewState('main')}
-          onComplete={handleStartMission}
+          onComplete={handleCompleteMission}
           onChangeToSmaller={() => setHomeViewState('smaller')}
         />
       )}
@@ -158,7 +164,10 @@ export default function ActiveMissionWidget({
           onBack={() => setHomeViewState('detail')}
           onClose={() => setHomeViewState('main')}
           onStartSmaller={handleStartSmallerMission}
-          onRest={handleRestForToday}
+          onRest={() => {
+            onRestToday();
+            setHomeViewState('main');
+          }}
         />
       )}
     </View>

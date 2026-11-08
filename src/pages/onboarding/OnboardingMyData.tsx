@@ -1,11 +1,11 @@
-// src/screens/OnboardingMyData.tsx — Screen 5: 마이데이터 연동
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   SafeAreaView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
@@ -13,7 +13,7 @@ import tw from '@/shared/lib/tailwind';
 import { COLORS } from '@/shared/config/theme';
 
 interface OnboardingMyDataProps {
-  onConsent: (consent: boolean) => void;
+  onConsent: (consent: boolean) => Promise<void>;
 }
 
 // Lock icon component
@@ -38,6 +38,18 @@ function LockIcon() {
 
 export default function OnboardingMyData({ onConsent }: OnboardingMyDataProps) {
   const insets = useSafeAreaInsets();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConsent = async (consent: boolean) => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      await onConsent(consent);
+    } catch (e) {
+      // In case of error, stop loading so user can try again
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={tw`flex-1 bg-[rgba(0,0,0,0.4)]`}>
@@ -45,7 +57,7 @@ export default function OnboardingMyData({ onConsent }: OnboardingMyDataProps) {
         {/* Center Modal Card */}
         <View
           style={[
-            tw`bg-white rounded-3xl px-6 pt-8 pb-6 shadow-lg`,
+            tw`bg-white rounded-3xl px-6 pt-8 pb-6 shadow-lg relative overflow-hidden`,
           ]}
         >
           {/* Lock Icon */}
@@ -68,7 +80,8 @@ export default function OnboardingMyData({ onConsent }: OnboardingMyDataProps) {
             {/* Skip Button */}
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => onConsent(false)}
+              onPress={() => handleConsent(false)}
+              disabled={isLoading}
               style={tw`flex-1 py-4 rounded-3xl bg-gray-100 items-center`}
             >
               <Text style={tw`text-gray-700 font-bold text-base`}>
@@ -79,7 +92,8 @@ export default function OnboardingMyData({ onConsent }: OnboardingMyDataProps) {
             {/* Consent Button */}
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => onConsent(true)}
+              onPress={() => handleConsent(true)}
+              disabled={isLoading}
               style={tw`flex-1 py-4 rounded-3xl bg-[${COLORS.primary}] items-center shadow-md`}
             >
               <Text style={tw`text-white font-bold text-base`}>
@@ -87,6 +101,16 @@ export default function OnboardingMyData({ onConsent }: OnboardingMyDataProps) {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Loading Overlay */}
+          {isLoading && (
+            <View style={tw`absolute inset-0 bg-white/70 items-center justify-center`}>
+              <ActivityIndicator size="large" color={COLORS.primary} />
+              <Text style={tw`mt-4 text-[${COLORS.primary}] font-bold text-sm`}>
+                플랜을 생성하는 중이야...
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </SafeAreaView>

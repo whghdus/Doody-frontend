@@ -5,7 +5,7 @@ import IndependenceRestConfirmModal from '@/features/independence/ui/Independenc
 import IndependenceRoadmapModal from '@/features/independence/ui/IndependenceRoadmapModal';
 import NextStageScreen from '@/pages/mission/NextStageScreen';
 import MissionVerifyScreen from '@/pages/mission/MissionVerifyScreen';
-import { AutonomyMissionDetailResponse } from '@/shared/api/autonomy';
+import { AutonomyMissionDetailResponse, AutonomyNode } from '@/shared/api/autonomy';
 
 interface IndependenceMissionWidgetProps {
   showMissionModal: boolean;
@@ -21,10 +21,14 @@ interface IndependenceMissionWidgetProps {
   showUnlock: boolean;
   setShowUnlock: (visible: boolean) => void;
   currentStep: number;
+  nodes?: AutonomyNode[];
+  pathTitle?: string;
   currentMissionDetail: AutonomyMissionDetailResponse | null;
   onRest: () => void;
   onStartMission: () => void;
   onStartSmaller: () => void;
+  candidate?: import('@/shared/api/mission').BackendMission | null;
+  message?: string;
   onRestForToday: () => void;
   onVerifyComplete: (photoUri?: string) => Promise<void>;
   onGoToCollection?: () => void;
@@ -38,10 +42,14 @@ export default function IndependenceMissionWidget({
   showVerifyScreen, setShowVerifyScreen,
   showUnlock, setShowUnlock,
   currentStep,
+  nodes,
+  pathTitle,
   currentMissionDetail,
   onRest,
   onStartMission,
   onStartSmaller,
+  candidate,
+  message,
   onRestForToday,
   onVerifyComplete,
   onGoToCollection,
@@ -77,7 +85,7 @@ export default function IndependenceMissionWidget({
         title={currentMissionDetail?.title || ''}
         reason={currentMissionDetail?.reason || ''}
         steps={currentMissionDetail?.howTo || []}
-        reward={currentMissionDetail?.reward || 30}
+        reward={currentMissionDetail?.reward?.hanaMoney}
         onRest={onRest}
         onStart={onStartMission}
         onClose={() => setShowMissionModal(false)}
@@ -94,6 +102,8 @@ export default function IndependenceMissionWidget({
           onRestForToday();
         }}
         onStartSmaller={onStartSmaller}
+        candidate={candidate}
+        message={message}
       />
 
       <IndependenceRestConfirmModal
@@ -112,6 +122,8 @@ export default function IndependenceMissionWidget({
         visible={showRoadmapModal}
         onClose={() => setShowRoadmapModal(false)}
         currentStep={currentStep}
+        nodes={nodes}
+        pathTitle={pathTitle}
       />
     </>
   );

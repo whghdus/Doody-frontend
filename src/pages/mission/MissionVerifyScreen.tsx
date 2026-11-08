@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
+  Modal
   } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import tw from '@/shared/lib/tailwind';
@@ -57,7 +58,8 @@ export default function MissionVerifyScreen({
   };
 
   return (
-    <Background theme="day">
+    <Modal visible={true} animationType="slide" transparent={false} onRequestClose={handleCloseOrReset}>
+      <Background theme="day">
       <SafeAreaView style={tw`flex-1`}>
         {/* Top Header Row (z-30 so it stays above the dimmed modal overlay) */}
         <View style={tw`relative w-full flex-row items-center justify-center px-6 py-4 z-30`}>
@@ -176,5 +178,6 @@ export default function MissionVerifyScreen({
         )}
       </SafeAreaView>
     </Background>
+    </Modal>
   );
 }

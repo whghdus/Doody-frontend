@@ -40,6 +40,13 @@ export default function SignupScreen({ onSignup, onBack }: SignupScreenProps) {
     try {
       await AsyncStorage.setItem('userEmail', email.trim());
       await AsyncStorage.setItem('userNickname', nickname.trim());
+      
+      // Clear local caches from previous sessions/accounts
+      await AsyncStorage.removeItem('daily_mission_completed_date');
+      await AsyncStorage.removeItem('morning_checkin_date');
+      await AsyncStorage.removeItem('night_checkin_date');
+      await AsyncStorage.removeItem('mock_quiz_completed');
+
       onSignup(email.trim(), nickname.trim());
     } catch (error) {
       console.error('Failed to save email to AsyncStorage', error);

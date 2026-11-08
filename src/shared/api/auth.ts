@@ -12,7 +12,7 @@ export interface SignupRequest {
   isMydataLinked?: boolean;
   autonomyGoal: string;
   connectionGoal: string;
-  firstStepMission: string;
+  firstStepMission?: string;
 }
 
 export interface SignupResponse {

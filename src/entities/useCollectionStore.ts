@@ -10,12 +10,12 @@ interface CollectionState {
 
 export const mapDoodyIdToIndex = (doodyId: string): number => {
   const lower = doodyId.toLowerCase();
+  if (lower.includes('exploration') || lower.includes('map') || lower.includes('008') || lower.includes('002')) return 5;
   if (lower.includes('default') || lower.includes('001')) return 0;
-  if (lower.includes('brush') || lower.includes('002')) return 1;
+  if (lower.includes('brush')) return 1;
   if (lower.includes('happy') || lower.includes('003')) return 2;
   if (lower.includes('sad') || lower.includes('004')) return 3;
   if (lower.includes('smile') || lower.includes('common') || lower.includes('005')) return 4;
-  if (lower.includes('exploration') || lower.includes('008')) return 5;
   if (lower.includes('salary') || lower.includes('connection') || lower.includes('006')) return 6;
   if (lower.includes('green') || lower.includes('autonomy') || lower.includes('007')) return 7;
   return 0;

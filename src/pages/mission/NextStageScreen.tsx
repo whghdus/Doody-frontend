@@ -161,7 +161,7 @@ export default function NextStageScreen({ onClose, stageType = 'connection', onG
             {/* Inner Info Container */}
             <View style={tw`bg-[#EEF7F5] rounded-2xl p-4 w-full items-center mb-6`}>
               <Text style={tw`text-[#008C75] font-black text-sm mb-2.5 text-center`}>
-                {isConnection ? '🌱 하나 파워온 혜택' : '🌱 하나 증권 첫 시드'}
+                {isConnection ? '🌱 하나 파워온 혜택' : '🌱 하나 증권 첫 한돈 RWA'}
               </Text>
               
               {/* Seed Amount Pill */}
@@ -170,12 +170,12 @@ export default function NextStageScreen({ onClose, stageType = 'connection', onG
                   <Text style={tw`text-white text-[10px] font-black`}>₩</Text>
                 </View>
                 <Text style={tw`text-[#7A5A00] text-xs font-black`}>
-                  {isConnection ? '취업/창업 지원금 보러가기' : '투자 연습용 시드 100,000원'}
+                  {isConnection ? '취업/창업 지원금 보러가기' : '시드머니 한돈 RWA 100,000원'}
                 </Text>
               </View>
 
               <Text style={tw`text-[#008C75] text-[11px] font-bold text-center leading-relaxed`}>
-                {isConnection ? '청년을 위한 다양한 지원 프로그램 혜택을 알아봐!' : '언젠가 네가 첫 거래를 해보는 날, 이 돈은 진짜 너의 돈이 될거야!'}
+                {isConnection ? '청년을 위한 다양한 지원 프로그램 혜택을 알아봐!' : '언젠가 네가 첫 거래를 해보는 날, 이 한돈 RWA는 진짜 너의 돈이 될거야!'}
               </Text>
             </View>
 

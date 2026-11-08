@@ -54,13 +54,8 @@ export const checkInApi = {
         collectedDudy: data?.collectedDudy || [],
       };
     } catch (error) {
-      console.log('morning check-in error, using local fallback:', error);
-      return {
-        success: true,
-        pointsEarned: 20,
-        greeting: undefined,
-        collectedDudy: [],
-      };
+      console.log('morning check-in error:', error);
+      throw error;
     }
   },
 
@@ -84,13 +79,8 @@ export const checkInApi = {
         collectedDudy: data?.collectedDudy || [],
       };
     } catch (error) {
-      console.log('evening check-in error, using local fallback:', error);
-      return {
-        success: true,
-        pointsEarned: 30,
-        greeting: 'Today is recorded.',
-        collectedDudy: [],
-      };
+      console.log('evening check-in error:', error);
+      throw error;
     }
   },
 };
